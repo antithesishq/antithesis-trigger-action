@@ -1,6 +1,6 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Antithesis Trigger Action'
+description: 'An action that triggers an Antithesis workflow'
+author: 'AntithesisHQ'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +9,13 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  notebook_name:
+    description: 'The name of the notebook containing the workflow to run'
     required: true
-    default: '1000'
+    default: 'demo_ci_integration_webhook'
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
 
 runs:
   using: node20
