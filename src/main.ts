@@ -8,7 +8,7 @@ export async function run(): Promise<void> {
   try {
     const notebook_name: string = core.getInput('notebook_name')
 
-    core.info('Notebook to Run: ' + notebook_name)
+    core.info(`Notebook to Run: ${notebook_name}`)
 
     core.setOutput('result', 'Success')
   } catch (error) {

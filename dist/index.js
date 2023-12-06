@@ -2760,7 +2760,7 @@ const core = __importStar(__nccwpck_require__(186));
 async function run() {
     try {
         const notebook_name = core.getInput('notebook_name');
-        core.info('Notebook to Run: ' + notebook_name);
+        core.info(`Notebook to Run: ${notebook_name}`);
         core.setOutput('result', 'Success');
     }
     catch (error) {
