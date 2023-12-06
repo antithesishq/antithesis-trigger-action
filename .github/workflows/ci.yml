@@ -55,7 +55,7 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          notebook_name: demo_ci_integration_webhook
 
       - name: Print Output
         id: output
