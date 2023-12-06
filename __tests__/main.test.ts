@@ -8,6 +8,7 @@
 
 import * as core from '@actions/core'
 import * as main from '../src/main'
+import axios from 'axios'
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -16,6 +17,7 @@ const runMock = jest.spyOn(main, 'run')
 let infoMock: jest.SpyInstance
 let getInputMock: jest.SpyInstance
 let setOutputMock: jest.SpyInstance
+let axiosMock: jest.SpyInstance
 
 describe('action', () => {
   beforeEach(() => {
@@ -24,6 +26,7 @@ describe('action', () => {
     infoMock = jest.spyOn(core, 'info').mockImplementation()
     getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
     setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+    axiosMock = jest.spyOn(axios, 'post').mockImplementation()
   })
 
   it('sets the notebook name', async () => {
@@ -31,10 +34,20 @@ describe('action', () => {
     getInputMock.mockImplementation((name: string): string => {
       switch (name) {
         case 'notebook_name':
-          return 'demo_ci_integration_webhook'
+          return 'test_notebook_name'
+        case 'tenant':
+          return 'test_tenant'
+        case 'username':
+          return 'username'
+        case 'password':
+          return 'password'
         default:
           return ''
       }
+    })
+
+    axiosMock.mockImplementation(() => {
+      return
     })
 
     await main.run()
@@ -43,7 +56,7 @@ describe('action', () => {
     // Verify that all of the core library functions were called correctly
     expect(infoMock).toHaveBeenNthCalledWith(
       1,
-      'Notebook to Run: demo_ci_integration_webhook'
+      'Request :https://test_tenant.antithesis.com/api/v1/launch_experiment/test_notebook_name'
     )
 
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')

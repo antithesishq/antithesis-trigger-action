@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import axios from 'axios'
 
 /**
  * The main function for the action.
@@ -6,13 +7,31 @@ import * as core from '@actions/core'
  */
 export async function run(): Promise<void> {
   try {
+    const tenant: string = core.getInput('tenant')
     const notebook_name: string = core.getInput('notebook_name')
 
-    core.info(`Notebook to Run: ${notebook_name}`)
+    const url = `https://${tenant}.antithesis.com/api/v1/launch_experiment/${notebook_name}`
 
+    core.info(`Request :${url}`)
+
+    const username = core.getInput('username')
+    const password = core.getInput('password')
+
+    const result = await axios.post(
+      url,
+      {},
+      {
+        auth: {
+          username,
+          password
+        }
+      }
+    )
+
+    core.info(`Successfully sent the request ${result}`)
     core.setOutput('result', 'Success')
   } catch (error) {
-    // Fail the workflow run if an error occurs
+    core.error(`Failed to submit request : ${error}`)
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
