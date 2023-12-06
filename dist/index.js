@@ -2761,6 +2761,7 @@ async function run() {
     try {
         const notebook_name = core.getInput('notebook_name');
         core.info('Notebook to Run: ' + notebook_name);
+        core.setOutput('result', 'Success');
     }
     catch (error) {
         // Fail the workflow run if an error occurs

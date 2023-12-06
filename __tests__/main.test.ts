@@ -13,22 +13,16 @@ import * as main from '../src/main'
 const runMock = jest.spyOn(main, 'run')
 
 // Mock the GitHub Actions core library
-let debugMock: jest.SpyInstance
-let errorMock: jest.SpyInstance
 let infoMock: jest.SpyInstance
 let getInputMock: jest.SpyInstance
-let setFailedMock: jest.SpyInstance
 let setOutputMock: jest.SpyInstance
 
 describe('action', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    debugMock = jest.spyOn(core, 'debug').mockImplementation()
-    errorMock = jest.spyOn(core, 'error').mockImplementation()
     infoMock = jest.spyOn(core, 'info').mockImplementation()
     getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-    setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
     setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
   })
 
@@ -51,7 +45,7 @@ describe('action', () => {
       1,
       'Notebook to Run: demo_ci_integration_webhook'
     )
-  })
 
-  it('sets a failed status', async () => {})
+    expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
+  })
 })

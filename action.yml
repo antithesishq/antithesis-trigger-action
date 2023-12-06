@@ -16,6 +16,8 @@ inputs:
 
 # Define your outputs here.
 outputs:
+  result:
+    description: 'Whether triggering the workflow was successful or not'
 
 runs:
   using: node20
