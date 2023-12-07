@@ -1,3 +1,4 @@
+import { context } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
 
@@ -16,6 +17,8 @@ export async function run(): Promise<void> {
 
     const username = core.getInput('username')
     const password = core.getInput('password')
+
+    core.info(JSON.stringify(context))
 
     const result = await axios.post(
       url,
