@@ -18,14 +18,11 @@ export async function run(): Promise<void> {
     const username = core.getInput('username')
     const password = core.getInput('password')
 
-    core.info(JSON.stringify(context))
-
     const github_token = core.getInput('github_token')
 
     const statuses_url = context?.payload?.repository?.statuses_url
-    core.info(`Statuses_url: ${statuses_url}`)
+    const commit_sha = context?.sha
 
-    const commit_sha = context?.payload?.sha
     core.info(`Sha: ${commit_sha}`)
 
     const call_back_url =

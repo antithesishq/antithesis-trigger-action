@@ -32414,11 +32414,9 @@ async function run() {
         core.info(`Request :${url}`);
         const username = core.getInput('username');
         const password = core.getInput('password');
-        core.info(JSON.stringify(github_1.context));
         const github_token = core.getInput('github_token');
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
-        core.info(`Statuses_url: ${statuses_url}`);
-        const commit_sha = github_1.context?.payload?.sha;
+        const commit_sha = github_1.context?.sha;
         core.info(`Sha: ${commit_sha}`);
         const call_back_url = statuses_url !== undefined && commit_sha !== undefined
             ? statuses_url.replace('{sha}', '')
