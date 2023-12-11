@@ -32418,7 +32418,7 @@ async function run() {
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
         const commit_sha = github_1.context?.sha;
         const call_back_url = statuses_url !== undefined && commit_sha !== undefined
-            ? `${statuses_url}${commit_sha}`
+            ? `${statuses_url.replace('{sha}', '')}${commit_sha}`
             : undefined;
         core.info(`Callback URL: ${call_back_url}`);
         const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}`;

@@ -25,7 +25,7 @@ export async function run(): Promise<void> {
 
     const call_back_url =
       statuses_url !== undefined && commit_sha !== undefined
-        ? `${statuses_url}${commit_sha}`
+        ? `${statuses_url.replace('{sha}', '')}${commit_sha}`
         : undefined
 
     core.info(`Callback URL: ${call_back_url}`)
