@@ -25,6 +25,11 @@ inputs:
     description: 'The password of the account running the workflow'
     required: true
     default: ''
+  github_token:
+    description: 'The Github token to be used to post back status updates'
+    required: true
+    default: ''
+
 
 # Define your outputs here.
 outputs:

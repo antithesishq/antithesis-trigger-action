@@ -41,6 +41,8 @@ describe('action', () => {
           return 'username'
         case 'password':
           return 'password'
+        case 'github_token':
+          return 'github_token'
         default:
           return ''
       }
