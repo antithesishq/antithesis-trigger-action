@@ -32439,7 +32439,7 @@ async function run() {
                     sha,
                     state: 'pending',
                     description: 'Antithesis is running your tests.',
-                    context: 'continous-testing/antithesis'
+                    context: 'continuous-testing/antithesis'
                 });
             }
         }
