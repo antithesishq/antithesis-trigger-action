@@ -1,4 +1,4 @@
-import { context } from '@actions/github'
+import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
 
@@ -21,11 +21,13 @@ export async function run(): Promise<void> {
     const github_token = core.getInput('github_token')
 
     const statuses_url = context?.payload?.repository?.statuses_url
-    const commit_sha = context?.sha
+    const sha = context?.sha
+    const owner = context?.payload?.repository?.owner?.name
+    const repo = context?.payload?.repository?.name
 
     const call_back_url =
-      statuses_url !== undefined && commit_sha !== undefined
-        ? `${statuses_url.replace('{sha}', '')}${commit_sha}`
+      statuses_url !== undefined && sha !== undefined
+        ? `${statuses_url.replace('{sha}', '')}${sha}`
         : undefined
 
     core.info(`Callback URL: ${call_back_url}`)
@@ -38,6 +40,22 @@ export async function run(): Promise<void> {
         password
       }
     })
+
+    try {
+      const octokit = getOctokit(github_token)
+
+      if (owner && repo && sha) {
+        octokit.rest.repos.createCommitStatus({
+          owner,
+          repo,
+          sha,
+          state: 'pending',
+          description: 'Antithesis is running your tests.'
+        })
+      }
+    } catch (error) {
+      core.error(`Failed to post a pending status on GitHub due to ${error}`)
+    }
 
     core.info(`Successfully sent the request ${result}`)
     core.setOutput('result', 'Success')

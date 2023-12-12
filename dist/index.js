@@ -32416,9 +32416,11 @@ async function run() {
         const password = core.getInput('password');
         const github_token = core.getInput('github_token');
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
-        const commit_sha = github_1.context?.sha;
-        const call_back_url = statuses_url !== undefined && commit_sha !== undefined
-            ? `${statuses_url.replace('{sha}', '')}${commit_sha}`
+        const sha = github_1.context?.sha;
+        const owner = github_1.context?.payload?.repository?.owner?.name;
+        const repo = github_1.context?.payload?.repository?.name;
+        const call_back_url = statuses_url !== undefined && sha !== undefined
+            ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
         core.info(`Callback URL: ${call_back_url}`);
         const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}`;
@@ -32428,6 +32430,21 @@ async function run() {
                 password
             }
         });
+        try {
+            const octokit = (0, github_1.getOctokit)(github_token);
+            if (owner && repo && sha) {
+                octokit.rest.repos.createCommitStatus({
+                    owner,
+                    repo,
+                    sha,
+                    state: 'pending',
+                    description: 'Antithesis is running your tests.'
+                });
+            }
+        }
+        catch (error) {
+            core.error(`Failed to post a pending status on GitHub due to ${error}`);
+        }
         core.info(`Successfully sent the request ${result}`);
         core.setOutput('result', 'Success');
     }
