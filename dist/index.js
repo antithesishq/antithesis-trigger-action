@@ -32438,7 +32438,8 @@ async function run() {
                     repo,
                     sha,
                     state: 'pending',
-                    description: 'Antithesis is running your tests.'
+                    description: 'Antithesis is running your tests.',
+                    context: 'continous-testing/antithesis'
                 });
             }
         }
