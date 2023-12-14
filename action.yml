@@ -29,7 +29,10 @@ inputs:
     description: 'The Github token to be used to post back status updates'
     required: true
     default: ''
-
+  containers:
+    description: 'The container information for the software under test in the following format "container1-name:container1-tag,container2-name:container2-tag" '
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:

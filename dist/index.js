@@ -32415,21 +32415,22 @@ async function run() {
         const username = core.getInput('username');
         const password = core.getInput('password');
         const github_token = core.getInput('github_token');
+        const containers = core.getInput('containers');
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
         const sha = github_1.context?.sha;
-        const owner = github_1.context?.payload?.repository?.owner?.name;
-        const repo = github_1.context?.payload?.repository?.name;
         const call_back_url = statuses_url !== undefined && sha !== undefined
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
         core.info(`Callback URL: ${call_back_url}`);
-        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}`;
+        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.containers=${containers}`;
         const result = await axios_1.default.post(url, body, {
             auth: {
                 username,
                 password
             }
         });
+        const owner = github_1.context?.payload?.repository?.owner?.name;
+        const repo = github_1.context?.payload?.repository?.name;
         try {
             const octokit = (0, github_1.getOctokit)(github_token);
             if (owner && repo && sha) {
