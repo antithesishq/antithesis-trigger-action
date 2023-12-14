@@ -18,7 +18,7 @@ export async function run(): Promise<void> {
     const username = core.getInput('username')
     const password = core.getInput('password')
     const github_token = core.getInput('github_token')
-    const containers = core.getInput('containers')
+    const images = core.getInput('images')
 
     const statuses_url = context?.payload?.repository?.statuses_url
     const sha = context?.sha
@@ -29,7 +29,7 @@ export async function run(): Promise<void> {
 
     core.info(`Callback URL: ${call_back_url}`)
 
-    const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.containers=${containers}`
+    const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.containers=${images}`
 
     const result = await axios.post(url, body, {
       auth: {

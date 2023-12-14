@@ -32415,14 +32415,14 @@ async function run() {
         const username = core.getInput('username');
         const password = core.getInput('password');
         const github_token = core.getInput('github_token');
-        const containers = core.getInput('containers');
+        const images = core.getInput('images');
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
         const sha = github_1.context?.sha;
         const call_back_url = statuses_url !== undefined && sha !== undefined
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
         core.info(`Callback URL: ${call_back_url}`);
-        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.containers=${containers}`;
+        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.containers=${images}`;
         const result = await axios_1.default.post(url, body, {
             auth: {
                 username,
