@@ -32422,7 +32422,7 @@ async function run() {
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
         core.info(`Callback URL: ${call_back_url}`);
-        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.containers=${images}`;
+        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.images=${images}`;
         const result = await axios_1.default.post(url, body, {
             auth: {
                 username,
