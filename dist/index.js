@@ -32446,45 +32446,69 @@ const axios_1 = __importDefault(__nccwpck_require__(8757));
  */
 async function run() {
     try {
+        // Build the request URL
         const tenant = core.getInput('tenant');
         const notebook_name = core.getInput('notebook_name');
         const url = `https://${tenant}.antithesis.com/api/v1/launch_experiment/${notebook_name}`;
-        core.info(`Request :${url}`);
-        const username = core.getInput('username');
-        const password = core.getInput('password');
-        const github_token = core.getInput('github_token');
-        const images = core.getInput('images');
+        core.info(`Request Url:${url}`);
+        // Build the Callback URL
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
         const sha = github_1.context?.sha;
         const call_back_url = statuses_url !== undefined && sha !== undefined
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
-        core.info(`Callback URL: ${call_back_url}`);
-        const body = `antithesis.integrations.call_back_url=${call_back_url}&antithesis.integrations.token=${github_token}&antithesis.images=${images}`;
+        core.info(`Callback Url: ${call_back_url}`);
+        // Build the request body
+        const github_token = core.getInput('github_token');
+        const images = core.getInput('images');
+        const body = {
+            params: {
+                'antithesis.integrations.type': 'github',
+                'antithesis.integrations.call_back_url': call_back_url,
+                'antithesis.integrations.token': github_token,
+                'antithesis.images': images
+            }
+        };
+        // Call into Anithesis
+        const username = core.getInput('username');
+        const password = core.getInput('password');
         const result = await axios_1.default.post(url, body, {
             auth: {
                 username,
                 password
             }
         });
-        const owner = github_1.context?.payload?.repository?.owner?.name;
-        const repo = github_1.context?.payload?.repository?.name;
-        try {
-            const octokit = (0, github_1.getOctokit)(github_token);
-            if (owner && repo && sha) {
-                octokit.rest.repos.createCommitStatus({
-                    owner,
-                    repo,
-                    sha,
-                    state: 'pending',
-                    description: 'Antithesis is running your tests.',
-                    context: 'continuous-testing/antithesis'
-                });
+        if (result.status < 200 || result.status >= 300) {
+            const msg = `Failed to submit request, recieved a non-2XX response code : ${result.status}`;
+            core.error(msg);
+            core.setFailed(msg);
+            return;
+        }
+        // Update GitHub commit status with pending status
+        // Only if we have a call back URL & a token , because we want to make sure
+        // that Antithesis could update the status to done
+        if (call_back_url !== undefined && github_token !== undefined) {
+            const owner = github_1.context?.payload?.repository?.owner?.name;
+            const repo = github_1.context?.payload?.repository?.name;
+            try {
+                const octokit = (0, github_1.getOctokit)(github_token);
+                if (owner && repo && sha) {
+                    octokit.rest.repos.createCommitStatus({
+                        owner,
+                        repo,
+                        sha,
+                        state: 'pending',
+                        description: 'Antithesis is running your tests.',
+                        context: 'continuous-testing/antithesis'
+                    });
+                }
+            }
+            catch (error) {
+                core.error(`Failed to post a pending status on GitHub due to ${error}`);
+                // this is a non-fatal error so we are ok if we miss this step
             }
         }
-        catch (error) {
-            core.error(`Failed to post a pending status on GitHub due to ${error}`);
-        }
+        // Set status to success
         core.info(`Successfully sent the request ${result}`);
         core.setOutput('result', 'Success');
     }
