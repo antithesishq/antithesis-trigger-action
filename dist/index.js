@@ -32492,6 +32492,9 @@ async function run() {
             const repo = github_1.context?.payload?.repository?.name;
             try {
                 const octokit = (0, github_1.getOctokit)(github_token);
+                core.info(`Owner ${owner}`);
+                core.info(`Repo ${repo}`);
+                core.info(`Sha ${sha}`);
                 if (owner && repo && sha) {
                     octokit.rest.repos.createCommitStatus({
                         owner,
