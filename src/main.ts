@@ -68,9 +68,11 @@ export async function run(): Promise<void> {
       try {
         const octokit = getOctokit(github_token)
 
-        core.info(`Owner ${owner}`)
-        core.info(`Repo ${repo}`)
-        core.info(`Sha ${sha}`)
+        core.info(`Context: ${JSON.stringify(context)}`)
+
+        core.info(`Owner: ${owner}`)
+        core.info(`Repo: ${repo}`)
+        core.info(`Sha: ${sha}`)
 
         if (owner && repo && sha) {
           octokit.rest.repos.createCommitStatus({
