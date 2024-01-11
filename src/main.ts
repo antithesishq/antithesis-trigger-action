@@ -62,7 +62,10 @@ export async function run(): Promise<void> {
     // Only if we have a call back URL & a token , because we want to make sure
     // that Antithesis could update the status to done
     if (call_back_url !== undefined && github_token !== undefined) {
-      const owner = context?.payload?.repository?.owner?.name
+      let owner = context?.payload?.repository?.owner?.name
+      if (owner === undefined)
+        owner = context?.payload?.repository?.owner?.login
+
       const repo = context?.payload?.repository?.name
 
       try {

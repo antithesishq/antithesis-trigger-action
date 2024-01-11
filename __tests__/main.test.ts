@@ -138,6 +138,43 @@ describe('successful_action', () => {
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
+  it('calls Anithesis when repo owner name is not specified', async () => {
+    axiosMock.mockImplementation(() => {
+      return {
+        status: 202
+      }
+    })
+
+    github.context.payload = {
+      repository: {
+        name: 'repo_name',
+        owner: { login: 'owner_name' },
+        statuses_url: 'https://where.to.post.status.com/sha1'
+      }
+    }
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    // Validate callback is called correctly
+    expect(axiosMock).toHaveBeenCalled()
+
+    // Verify that all of the core library functions were called correctly
+    expect(infoMock).toHaveBeenNthCalledWith(
+      1,
+      'Request Url:https://test_tenant.antithesis.com/api/v1/launch_experiment/test_notebook_name'
+    )
+
+    expect(infoMock).toHaveBeenNthCalledWith(
+      2,
+      'Callback Url: https://where.to.post.status.com/sha11234567890123456789012345678901234567890'
+    )
+
+    expect(createCommitStatusMock).toHaveBeenCalledTimes(1)
+
+    expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
+  })
+
   it('Handles Anithesis Non-2XX error code', async () => {
     axiosMock.mockImplementation(() => {
       return {

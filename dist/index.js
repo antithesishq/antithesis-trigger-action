@@ -32488,7 +32488,9 @@ async function run() {
         // Only if we have a call back URL & a token , because we want to make sure
         // that Antithesis could update the status to done
         if (call_back_url !== undefined && github_token !== undefined) {
-            const owner = github_1.context?.payload?.repository?.owner?.name;
+            let owner = github_1.context?.payload?.repository?.owner?.name;
+            if (owner === undefined)
+                owner = github_1.context?.payload?.repository?.owner?.login;
             const repo = github_1.context?.payload?.repository?.name;
             try {
                 const octokit = (0, github_1.getOctokit)(github_token);
