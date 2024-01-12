@@ -32460,13 +32460,11 @@ async function run() {
         core.info(`Callback Url: ${call_back_url}`);
         // Build the request body
         const github_token = core.getInput('github_token');
-        const images = core.getInput('images');
         const body = {
             params: {
                 'antithesis.integrations.type': 'github',
                 'antithesis.integrations.call_back_url': call_back_url,
-                'antithesis.integrations.token': github_token,
-                'antithesis.images': images
+                'antithesis.integrations.token': github_token
             }
         };
         // Call into Anithesis

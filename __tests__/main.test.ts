@@ -43,8 +43,6 @@ describe('successful_action', () => {
           return 'password'
         case 'github_token':
           return 'github_token'
-        case 'images':
-          return ''
         default:
           return ''
       }
