@@ -30,6 +30,8 @@ export async function run(): Promise<void> {
     // Read images informaiton
     const images = core.getInput('images')
 
+    core.info(`Images: ${images}`)
+
     // Build the request body
     const github_token = core.getInput('github_token')
 
@@ -72,12 +74,6 @@ export async function run(): Promise<void> {
 
       try {
         const octokit = getOctokit(github_token)
-
-        core.info(`Context: ${JSON.stringify(context)}`)
-
-        core.info(`Owner: ${owner}`)
-        core.info(`Repo: ${repo}`)
-        core.info(`Sha: ${sha}`)
 
         if (owner && repo && sha) {
           octokit.rest.repos.createCommitStatus({

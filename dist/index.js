@@ -32460,6 +32460,7 @@ async function run() {
         core.info(`Callback Url: ${call_back_url}`);
         // Read images informaiton
         const images = core.getInput('images');
+        core.info(`Images: ${images}`);
         // Build the request body
         const github_token = core.getInput('github_token');
         const body = {
@@ -32495,10 +32496,6 @@ async function run() {
             const repo = github_1.context?.payload?.repository?.name;
             try {
                 const octokit = (0, github_1.getOctokit)(github_token);
-                core.info(`Context: ${JSON.stringify(github_1.context)}`);
-                core.info(`Owner: ${owner}`);
-                core.info(`Repo: ${repo}`);
-                core.info(`Sha: ${sha}`);
                 if (owner && repo && sha) {
                     octokit.rest.repos.createCommitStatus({
                         owner,
