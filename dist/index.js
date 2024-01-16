@@ -32458,13 +32458,16 @@ async function run() {
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
         core.info(`Callback Url: ${call_back_url}`);
+        // Read images informaiton
+        const images = core.getInput('images');
         // Build the request body
         const github_token = core.getInput('github_token');
         const body = {
             params: {
                 'antithesis.integrations.type': 'github',
                 'antithesis.integrations.call_back_url': call_back_url,
-                'antithesis.integrations.token': github_token
+                'antithesis.integrations.token': github_token,
+                'antithesis.images': images
             }
         };
         // Call into Anithesis

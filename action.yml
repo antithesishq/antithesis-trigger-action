@@ -29,6 +29,10 @@ inputs:
     description: 'The Github token to be used to post back status updates'
     required: true
     default: ''
+  images:
+    description: 'The containers & digests that Antithesis tests will run on. If not specified the values will be inferred from the test.'
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:
