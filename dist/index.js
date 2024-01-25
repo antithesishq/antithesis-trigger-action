@@ -2208,7 +2208,7 @@ var import_graphql = __nccwpck_require__(8467);
 var import_auth_token = __nccwpck_require__(334);
 
 // pkg/dist-src/version.js
-var VERSION = "5.0.2";
+var VERSION = "5.1.0";
 
 // pkg/dist-src/index.js
 var noop = () => {
@@ -7591,6 +7591,7 @@ var preservedUrlFields = [
   "protocol",
   "query",
   "search",
+  "hash",
 ];
 
 // Create handlers that pass events from native requests
@@ -32454,10 +32455,10 @@ async function run() {
         // Build the Callback URL
         const statuses_url = github_1.context?.payload?.repository?.statuses_url;
         const sha = github_1.context?.sha;
-        const call_back_url = statuses_url !== undefined && sha !== undefined
+        const callback_url = statuses_url !== undefined && sha !== undefined
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
-        core.info(`Callback Url: ${call_back_url}`);
+        core.info(`Callback Url: ${callback_url}`);
         // Read images informaiton
         const images = core.getInput('images');
         core.info(`Images: ${images}`);
@@ -32466,7 +32467,7 @@ async function run() {
         const body = {
             params: {
                 'antithesis.integrations.type': 'github',
-                'antithesis.integrations.call_back_url': call_back_url,
+                'antithesis.integrations.callback_url': callback_url,
                 'antithesis.integrations.token': github_token,
                 'antithesis.images': images
             }
@@ -32489,7 +32490,7 @@ async function run() {
         // Update GitHub commit status with pending status
         // Only if we have a call back URL & a token , because we want to make sure
         // that Antithesis could update the status to done
-        if (call_back_url !== undefined && github_token !== undefined) {
+        if (callback_url !== undefined && github_token !== undefined) {
             let owner = github_1.context?.payload?.repository?.owner?.name;
             if (owner === undefined)
                 owner = github_1.context?.payload?.repository?.owner?.login;
@@ -34382,7 +34383,7 @@ module.exports = parseParams
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
-// Axios v1.6.5 Copyright (c) 2024 Matt Zabriskie and contributors
+// Axios v1.6.7 Copyright (c) 2024 Matt Zabriskie and contributors
 
 
 const FormData$1 = __nccwpck_require__(4334);
@@ -35838,9 +35839,6 @@ const defaults = {
     const isFormData = utils$1.isFormData(data);
 
     if (isFormData) {
-      if (!hasJSONContentType) {
-        return data;
-      }
       return hasJSONContentType ? JSON.stringify(formDataToJSON(data)) : data;
     }
 
@@ -36406,7 +36404,7 @@ function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 }
 
-const VERSION = "1.6.5";
+const VERSION = "1.6.7";
 
 function parseProtocol(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -36919,12 +36917,12 @@ const supportedProtocols = platform.protocols.map(protocol => {
  *
  * @returns {Object<string, any>}
  */
-function dispatchBeforeRedirect(options) {
+function dispatchBeforeRedirect(options, responseDetails) {
   if (options.beforeRedirects.proxy) {
     options.beforeRedirects.proxy(options);
   }
   if (options.beforeRedirects.config) {
-    options.beforeRedirects.config(options);
+    options.beforeRedirects.config(options, responseDetails);
   }
 }
 
@@ -38254,7 +38252,31 @@ class Axios {
    *
    * @returns {Promise} The Promise to be fulfilled
    */
-  request(configOrUrl, config) {
+  async request(configOrUrl, config) {
+    try {
+      return await this._request(configOrUrl, config);
+    } catch (err) {
+      if (err instanceof Error) {
+        let dummy;
+
+        Error.captureStackTrace ? Error.captureStackTrace(dummy = {}) : (dummy = new Error());
+
+        // slice off the Error: ... line
+        const stack = dummy.stack ? dummy.stack.replace(/^.+\n/, '') : '';
+
+        if (!err.stack) {
+          err.stack = stack;
+          // match without the 2 top stack lines
+        } else if (stack && !String(err.stack).endsWith(stack.replace(/^.+\n.+\n/, ''))) {
+          err.stack += '\n' + stack;
+        }
+      }
+
+      throw err;
+    }
+  }
+
+  _request(configOrUrl, config) {
     /*eslint no-param-reassign:0*/
     // Allow for axios('example/url'[, config]) a la fetch API
     if (typeof configOrUrl === 'string') {

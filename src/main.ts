@@ -20,12 +20,12 @@ export async function run(): Promise<void> {
     const statuses_url = context?.payload?.repository?.statuses_url
     const sha = context?.sha
 
-    const call_back_url =
+    const callback_url =
       statuses_url !== undefined && sha !== undefined
         ? `${statuses_url.replace('{sha}', '')}${sha}`
         : undefined
 
-    core.info(`Callback Url: ${call_back_url}`)
+    core.info(`Callback Url: ${callback_url}`)
 
     // Read images informaiton
     const images = core.getInput('images')
@@ -38,7 +38,7 @@ export async function run(): Promise<void> {
     const body = {
       params: {
         'antithesis.integrations.type': 'github',
-        'antithesis.integrations.call_back_url': call_back_url,
+        'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
         'antithesis.images': images
       }
@@ -65,7 +65,7 @@ export async function run(): Promise<void> {
     // Update GitHub commit status with pending status
     // Only if we have a call back URL & a token , because we want to make sure
     // that Antithesis could update the status to done
-    if (call_back_url !== undefined && github_token !== undefined) {
+    if (callback_url !== undefined && github_token !== undefined) {
       let owner = context?.payload?.repository?.owner?.name
       if (owner === undefined)
         owner = context?.payload?.repository?.owner?.login
