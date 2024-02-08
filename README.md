@@ -7,7 +7,7 @@
 
 This action runs an [Antithesis](https://www.antithesis.com/) test run as a step in a GitHub Action workflow job.
 
-## What is [Antithesis](https://www.antithesis.com/)?
+## What is Antithesis?
 
 Antithesis is a **continuous reliability platform** that **autonomously searches** for problems in your software within a **simulated environment**. Every problem we find can be **perfectly reproduced**, allowing for **efficient debugging** of even the most complex problems.
 
@@ -42,4 +42,5 @@ This action takes the following inputs to configure its behavior. You can see an
 ### Inputs
 
 - **my-test-notebook-name** : the name of your test that will be run (provided by Antithesis)
-- **my-subdomain-name** : the subdomain for your tenant (e.g. ``$TENANT_NAME.antithesis.com``)
+- **my-subdomain-name** : the subdomain for your tenant (e.g. `$TENANT_NAME.antithesis.com`)
+- **images** : the list of containers to test, this is a comma seperated list of container images specified in this format `NAME[:TAG|@DIGEST]`
