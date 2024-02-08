@@ -27,7 +27,7 @@ This action takes the following inputs to configure its behavior. You can see an
 
 4. Call the [Antithesis Trigger Action](https://github.com/antithesishq/antithesis-trigger-action) in your workflow file by adding the following code:
 
-```
+```yml
     - name: Run Antithesis Tests
       uses: antithesishq/antithesis-trigger-action@main
       with:
