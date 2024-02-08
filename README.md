@@ -7,7 +7,7 @@
 
 This action runs an [Antithesis](https://www.antithesis.com/) test run as a step in a GitHub Action workflow job.
 
-#### What is [Antithesis](https://www.antithesis.com/)?
+## What is [Antithesis](https://www.antithesis.com/)?
 
 Antithesis is a **continuous reliability platform** that **autonomously searches** for problems in your software within a **simulated environment**. Every problem we find can be **perfectly reproduced**, allowing for **efficient debugging** of even the most complex problems.
 
