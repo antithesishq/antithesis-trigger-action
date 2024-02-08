@@ -19,7 +19,7 @@ This action takes the following inputs to configure its behavior. You can see an
 
 1. Add your Antithesis ``username`` and ``password`` to your GitHub repository secrets and variables. Navigate to your repository action secrets settings found [here](https://github.com/<org_name>/<repo_name>/settings/secrets/actions). Add a new repository secret, and give it the name ``ANTITHESIS_USER_NAME`` to store your Antithesis username. Add another secret, and give it the name ``ANTITHESIS_PASSWORD`` to store your Antithesis password.
 
-2. Create a limited scope PAT token to enable Antithesis to post back results to Github. Navigate to your fine-grained access token settings found [here](https://github.com/settings/tokens?type=beta) and create a limited scope fine-grained access token with minimal permissions. It is recommended to limit the token to the repository running the workflow and to only grant the token permission to read the repository metadata and to read/write the commit status. For example:
+2. Create a limited scope PAT token to enable Antithesis to post back results to GitHub. Navigate to your fine-grained access token settings found [here](https://github.com/settings/tokens?type=beta) and create a limited scope fine-grained access token with minimal permissions. It is recommended to limit the token to the repository running the workflow and to only grant the token permission to read the repository metadata and to read/write the commit status. For example:
 
 ![github_pat_token_permissions](https://github.com/antithesishq/antithesis-trigger-action/assets/3439582/935c5c58-e158-4558-a455-9a5f99d48c8b)
 
