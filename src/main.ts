@@ -35,12 +35,16 @@ export async function run(): Promise<void> {
     // Build the request body
     const github_token = core.getInput('github_token')
 
+    // Extract the branch
+    const branch = context.ref?.replace('refs/heads/', '')
+
     const body = {
       params: {
         'antithesis.integrations.type': 'github',
         'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
-        'antithesis.images': images
+        'antithesis.images': images,
+        'antithesis.source': branch ?? ''
       }
     }
 
