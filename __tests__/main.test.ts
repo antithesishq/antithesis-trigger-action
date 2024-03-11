@@ -133,6 +133,46 @@ describe('successful_action', () => {
 
     expect(infoMock).toHaveBeenNthCalledWith(2, 'Callback Url: undefined')
 
+    expect(infoMock).toHaveBeenNthCalledWith(4, 'Source: some-ref')
+
+    expect(createCommitStatusMock).toHaveBeenCalledTimes(0)
+
+    expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
+  })
+
+  it('calls Anithesis even when no ref specified', async () => {
+    github.context.payload = {
+      repository: {
+        name: 'repo_name',
+        owner: { name: 'owner_name', login: 'owner_login' },
+        statuses_url: undefined
+      }
+    }
+
+    github.context.ref = ''
+
+    axiosMock.mockImplementation(() => {
+      return {
+        status: 202
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    // Validate callback is called correctly
+    expect(axiosMock).toHaveBeenCalled()
+
+    // Verify that all of the core library functions were called correctly
+    expect(infoMock).toHaveBeenNthCalledWith(
+      1,
+      'Request Url:https://test_tenant.antithesis.com/api/v1/launch_experiment/test_notebook_name'
+    )
+
+    expect(infoMock).toHaveBeenNthCalledWith(2, 'Callback Url: undefined')
+
+    expect(infoMock).toHaveBeenNthCalledWith(4, 'Source: ')
+
     expect(createCommitStatusMock).toHaveBeenCalledTimes(0)
 
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')

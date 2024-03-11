@@ -36,7 +36,9 @@ export async function run(): Promise<void> {
     const github_token = core.getInput('github_token')
 
     // Extract the branch
-    const branch = context.ref?.replace('refs/heads/', '')
+    const branch = context.ref.replace('refs/heads/', '') ?? ''
+
+    core.info(`Source: ${branch}`)
 
     const body = {
       params: {
@@ -44,7 +46,7 @@ export async function run(): Promise<void> {
         'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
         'antithesis.images': images,
-        'antithesis.source': branch ?? ''
+        'antithesis.source': branch
       }
     }
 
