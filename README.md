@@ -29,7 +29,7 @@ This action takes the following inputs to configure its behavior. You can see an
 
 ```yml
     - name: Run Antithesis Tests
-      uses: antithesishq/antithesis-trigger-action@v1
+      uses: antithesishq/antithesis-trigger-action@v0.1
       with:
         notebook_name: my-test-notebook-name
         tenant: my-subdomain-name
