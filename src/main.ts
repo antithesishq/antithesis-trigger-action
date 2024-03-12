@@ -36,7 +36,7 @@ export async function run(): Promise<void> {
     const github_token = core.getInput('github_token')
 
     // Extract the branch
-    const branch = context.ref.replace('refs/heads/', '') ?? ''
+    const branch = context.ref?.replace('refs/heads/', '') ?? ''
 
     core.info(`Source: ${branch}`)
 

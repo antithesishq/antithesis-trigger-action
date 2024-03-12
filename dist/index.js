@@ -32531,7 +32531,7 @@ async function run() {
         // Build the request body
         const github_token = core.getInput('github_token');
         // Extract the branch
-        const branch = github_1.context.ref.replace('refs/heads/', '') ?? '';
+        const branch = github_1.context.ref?.replace('refs/heads/', '') ?? '';
         core.info(`Source: ${branch}`);
         const body = {
             params: {
