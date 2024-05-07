@@ -29,8 +29,16 @@ inputs:
     description: 'The Github token to be used to post back status updates'
     required: true
     default: ''
+  config_image:
+    description: 'The image version that Antithesis will pull from the container registry for the config image.'
+    required: false
+    default: ''
   images:
     description: 'The containers & digests that Antithesis tests will run on. If not specified the values will be inferred from the test.'
+    required: false
+    default: ''
+  description:
+    description: 'A string description of your test run.'
     required: false
     default: ''
 

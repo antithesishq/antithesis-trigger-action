@@ -45,6 +45,10 @@ describe('successful_action', () => {
           return 'github_token'
         case 'images':
           return 'container1=sha1;container2=sha2;container3=sha3'
+        case 'config_image':
+          return 'config_container=sha4;'
+        case 'description':
+          return 'my description'
         default:
           return ''
       }
@@ -133,7 +137,7 @@ describe('successful_action', () => {
 
     expect(infoMock).toHaveBeenNthCalledWith(2, 'Callback Url: undefined')
 
-    expect(infoMock).toHaveBeenNthCalledWith(4, 'Source: some-ref')
+    expect(infoMock).toHaveBeenNthCalledWith(6, 'Source: some-ref')
 
     expect(createCommitStatusMock).toHaveBeenCalledTimes(0)
 
@@ -171,7 +175,7 @@ describe('successful_action', () => {
 
     expect(infoMock).toHaveBeenNthCalledWith(2, 'Callback Url: undefined')
 
-    expect(infoMock).toHaveBeenNthCalledWith(4, 'Source: ')
+    expect(infoMock).toHaveBeenNthCalledWith(6, 'Source: ')
 
     expect(createCommitStatusMock).toHaveBeenCalledTimes(0)
 

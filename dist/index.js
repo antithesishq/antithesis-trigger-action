@@ -32743,7 +32743,12 @@ async function run() {
         core.info(`Callback Url: ${callback_url}`);
         // Read images informaiton
         const images = core.getInput('images');
+        const config_image = core.getInput('config_image');
         core.info(`Images: ${images}`);
+        core.info(`Config Image: ${config_image}`);
+        // Read description information
+        const description = core.getInput('description');
+        core.info(`Desc: ${description}`);
         // Build the request body
         const github_token = core.getInput('github_token');
         // Extract the branch
@@ -32755,7 +32760,9 @@ async function run() {
                 'antithesis.integrations.callback_url': callback_url,
                 'antithesis.integrations.token': github_token,
                 'antithesis.images': images,
-                'antithesis.source': branch
+                'antithesis.config_image': config_image,
+                'antithesis.source': branch,
+                'antithesis.description': description
             }
         };
         // Call into Anithesis
