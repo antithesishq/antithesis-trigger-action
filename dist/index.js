@@ -32719,10 +32719,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.run = exports.parse_additional_parameters = void 0;
 const github_1 = __nccwpck_require__(5438);
 const core = __importStar(__nccwpck_require__(2186));
 const axios_1 = __importDefault(__nccwpck_require__(8757));
+function parse_parts(line) {
+    if (!line)
+        return undefined;
+    const parts = line?.trim().split('=');
+    if (parts && parts.length !== 2) {
+        core.warning(`Failed to parse these parameters:${line}`);
+        return undefined;
+    }
+    return { name: parts[0].trim(), value: parts[1].trim() };
+}
+function parse_additional_parameters(params_string) {
+    const result = {};
+    if (params_string) {
+        for (const line of params_string.split(/\r|\n/)) {
+            const parts = parse_parts(line);
+            if (parts) {
+                result[parts.name] = parts.value;
+            }
+        }
+    }
+    return result;
+}
+exports.parse_additional_parameters = parse_additional_parameters;
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -32754,6 +32777,10 @@ async function run() {
         // Extract the branch
         const branch = github_1.context.ref?.replace('refs/heads/', '') ?? '';
         core.info(`Source: ${branch}`);
+        // Extract email list
+        const emails = core.getInput('email_recipients');
+        const additional_parameters = parse_additional_parameters(core.getInput('additional_parameters'));
+        core.info(`Additional Parameters: ${JSON.stringify(additional_parameters)}`);
         const body = {
             params: {
                 'antithesis.integrations.type': 'github',
@@ -32762,7 +32789,9 @@ async function run() {
                 'antithesis.images': images,
                 'antithesis.config_image': config_image,
                 'antithesis.source': branch,
-                'antithesis.description': description
+                'antithesis.description': description,
+                'antithesis.report.recipients': emails,
+                ...additional_parameters
             }
         };
         // Call into Anithesis
