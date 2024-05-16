@@ -2,6 +2,37 @@ import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
 
+function parse_parts(
+  line: string
+): { name: string; value: string } | undefined {
+  if (!line) return undefined
+
+  const parts = line?.trim().split('=')
+
+  if (parts && parts.length !== 2) {
+    core.warning(`Failed to parse these parameters:${line}`)
+    return undefined
+  }
+
+  return { name: parts[0].trim(), value: parts[1].trim() }
+}
+
+export function parse_additional_parameters(
+  params_string: string
+): Record<string, string> {
+  const result: Record<string, string> = {}
+
+  if (params_string) {
+    for (const line of params_string.split(/\r|\n/)) {
+      const parts = parse_parts(line)
+      if (parts) {
+        result[parts.name] = parts.value
+      }
+    }
+  }
+  return result
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -48,6 +79,15 @@ export async function run(): Promise<void> {
 
     core.info(`Source: ${branch}`)
 
+    // Extract email list
+    const emails = core.getInput('email_recipients')
+
+    const additional_parameters = parse_additional_parameters(
+      core.getInput('additional_parameters')
+    )
+
+    core.info(`Additional Parameters: ${JSON.stringify(additional_parameters)}`)
+
     const body = {
       params: {
         'antithesis.integrations.type': 'github',
@@ -56,7 +96,9 @@ export async function run(): Promise<void> {
         'antithesis.images': images,
         'antithesis.config_image': config_image,
         'antithesis.source': branch,
-        'antithesis.description': description
+        'antithesis.description': description,
+        'antithesis.report.recipients': emails,
+        ...additional_parameters
       }
     }
 

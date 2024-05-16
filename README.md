@@ -39,6 +39,10 @@ This action takes the following inputs to configure its behavior. You can see an
         config_image: myconfigcontainer@digest
         images: mycontainer1@digest,mycontainer2:tag
         description: my-desc
+        email_recipients: email1@provider.com;email2@provider.com
+        additional_parameters: |-
+          parameter1_name=parameter1_value
+          parameter2_name=parameter2_value
 ```
 
 ### Inputs
@@ -48,3 +52,5 @@ This action takes the following inputs to configure its behavior. You can see an
 - **config_image** : The image version that Antithesis will pull from the container registry for the config image. This should be a single image version formatted in the same way as those in the antithesis.images parameter.
 - **images** : The image versions that Antithesis will use to build your test environment. The images are specified as an optional registry, a container name and either a digest (which is recommended) or a tag. A ‘;’ delimited list. Each entry is in this format: `[REGISTRY/]NAME[:TAG|@DIGEST]`.
 - **description** : A string description of your test run. The description will be in the headers of the generated report and of any emails triggered by the test run.
+- **email_recipients** : A semi-colon delimited list of the email addresses for the recipients who will be emailed links to the triage report produced by this test run. If this parameter is not specified, emails will be sent to the default users set up for the test.
+- **additional_parameters** : A newline-seperated list of additional parameters to be sent to the test run.

@@ -23,6 +23,63 @@ let setFailedMock: jest.SpyInstance
 let axiosMock: jest.SpyInstance
 let createCommitStatusMock: jest.SpyInstance
 
+describe('successful_params_parsing', () => {
+  it('empty params', async () => {
+    const params = main.parse_additional_parameters(``)
+
+    expect(params).toEqual({})
+  })
+
+  it('one line params', async () => {
+    const params = main.parse_additional_parameters(`p=v`)
+
+    expect(params).toEqual({ p: 'v' })
+  })
+
+  it('two line params', async () => {
+    const params = main.parse_additional_parameters(`
+    
+    p1=v1
+
+
+    p2=v2
+    
+    `)
+
+    expect(params).toEqual({ p1: 'v1', p2: 'v2' })
+  })
+
+  it('five line params', async () => {
+    const params = main.parse_additional_parameters(`p=v
+    p1 =    v1 
+    p2 = v2 
+    p3 = v3   
+    p4 = v4    
+    `)
+
+    expect(params).toEqual({ p: 'v', p1: 'v1', p2: 'v2', p3: 'v3', p4: 'v4' })
+  })
+
+  it('leading empty space in params', async () => {
+    const params = main.parse_additional_parameters(`
+    
+    
+    p   =   v`)
+
+    expect(params).toEqual({ p: 'v' })
+  })
+
+  it('trailing empty space in params', async () => {
+    const params = main.parse_additional_parameters(`p=v
+    
+    
+    
+    `)
+
+    expect(params).toEqual({ p: 'v' })
+  })
+})
+
 describe('successful_action', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -49,6 +106,13 @@ describe('successful_action', () => {
           return 'config_container=sha4;'
         case 'description':
           return 'my description'
+        case 'email_recipients':
+          return 'myemail@mycompany.com;myfriendsemail@mycompany.com'
+        case 'additional_parameters':
+          return `
+parameter1=value1
+parameter2=value2
+          `
         default:
           return ''
       }
@@ -101,6 +165,11 @@ describe('successful_action', () => {
     expect(infoMock).toHaveBeenNthCalledWith(
       2,
       'Callback Url: https://where.to.post.status.com/sha11234567890123456789012345678901234567890'
+    )
+
+    expect(infoMock).toHaveBeenNthCalledWith(
+      7,
+      `Additional Parameters: {"parameter1":"value1","parameter2":"value2"}`
     )
 
     expect(createCommitStatusMock).toHaveBeenCalledTimes(1)
