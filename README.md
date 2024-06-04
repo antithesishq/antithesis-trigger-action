@@ -37,7 +37,7 @@ This action takes the following inputs to configure its behavior. You can see an
         password: ${{ secrets.ANTITHESIS_PASSWORD }}
         github_token: ${{ secrets.GH_PAT }}
         config_image: myconfigcontainer@digest
-        images: mycontainer1@digest,mycontainer2:tag
+        images: mycontainer1@digest;mycontainer2:tag
         description: my-desc
         email_recipients: email1@provider.com;email2@provider.com
         additional_parameters: |-
