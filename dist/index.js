@@ -32796,6 +32796,7 @@ async function run() {
         const emails = core.getInput('email_recipients');
         const additional_parameters = parse_additional_parameters(core.getInput('additional_parameters'));
         core.info(`Additional Parameters: ${JSON.stringify(additional_parameters)}`);
+        const test_name = core.getInput('test_name');
         const body = {
             params: {
                 'antithesis.integrations.type': 'github',
@@ -32806,6 +32807,7 @@ async function run() {
                 'antithesis.source': branch,
                 'antithesis.description': description,
                 'antithesis.report.recipients': emails,
+                'antithesis.test_name': test_name,
                 ...additional_parameters
             }
         };
@@ -32834,6 +32836,9 @@ async function run() {
             const repo = github_1.context?.payload?.repository?.name;
             try {
                 const octokit = (0, github_1.getOctokit)(github_token);
+                const status_context = test_name !== undefined && test_name.length > 0
+                    ? `continuous-testing/antithesis (${test_name})`
+                    : 'continuous-testing/antithesis';
                 if (owner && repo && sha) {
                     octokit.rest.repos.createCommitStatus({
                         owner,
@@ -32841,7 +32846,7 @@ async function run() {
                         sha,
                         state: 'pending',
                         description: 'Antithesis is running your tests.',
-                        context: 'continuous-testing/antithesis'
+                        context: status_context
                     });
                 }
             }
