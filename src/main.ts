@@ -88,6 +88,8 @@ export async function run(): Promise<void> {
 
     core.info(`Additional Parameters: ${JSON.stringify(additional_parameters)}`)
 
+    const test_name = core.getInput('test_name')
+
     const body = {
       params: {
         'antithesis.integrations.type': 'github',
@@ -98,6 +100,7 @@ export async function run(): Promise<void> {
         'antithesis.source': branch,
         'antithesis.description': description,
         'antithesis.report.recipients': emails,
+        'antithesis.test_name': test_name,
         ...additional_parameters
       }
     }
@@ -133,6 +136,11 @@ export async function run(): Promise<void> {
       try {
         const octokit = getOctokit(github_token)
 
+        const status_context =
+          test_name !== undefined && test_name.length > 0
+            ? `continuous-testing/antithesis (${test_name})`
+            : 'continuous-testing/antithesis'
+
         if (owner && repo && sha) {
           octokit.rest.repos.createCommitStatus({
             owner,
@@ -140,7 +148,7 @@ export async function run(): Promise<void> {
             sha,
             state: 'pending',
             description: 'Antithesis is running your tests.',
-            context: 'continuous-testing/antithesis'
+            context: status_context
           })
         }
       } catch (error) {

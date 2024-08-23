@@ -106,6 +106,8 @@ describe('successful_action', () => {
           return 'config_container=sha4;'
         case 'description':
           return 'my description'
+        case 'test_name':
+          return 'test 1'
         case 'email_recipients':
           return 'myemail@mycompany.com;myfriendsemail@mycompany.com'
         case 'additional_parameters':
