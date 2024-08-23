@@ -55,11 +55,11 @@ This action takes the following inputs to configure its behavior. You can see an
 - **description** : A string description of your test run. The description will be in the headers of the generated report and of any emails triggered by the test run.
 - **email_recipients** : A semi-colon delimited list of the email addresses for the recipients who will be emailed links to the triage report produced by this test run. If this parameter is not specified, emails will be sent to the default users set up for the test.
 - **additional_parameters** : A newline-seperated list of additional parameters to be sent to the test run.
-- **test_name**: An optional name for the test you are running. When specified the context of the status set on the git commit will be set to `continuous-testing/antithesis (test_name)` otherwise the default context used is `continuous-testing/antithesis`. This enables users to optionally run more than one antithesis test per commit.
+- **test_name**: An optional name for the test you are running. When specified, the git commit's status context will be `continuous-testing/antithesis (test_name)`. Otherwise, the default context is `continuous-testing/antithesis`. This enables users to run more than one Antithesis test per commit.
 
 ### FAQs
 
-#### How to run multiple tests on the same commit using this GitHub Action?
+#### How can I run multiple tests on the same commit using this GitHub Action?
 
 To run multiple tests from the same commit using this GitHub action, you can set a unique `test_name` parameter when calling the action. This will create a unique git commit status context for every unique `test_name` specified. The example below shows what this will look like if 2 tests were ran for a commit one called _first test_ and the other called _second test_.
 
