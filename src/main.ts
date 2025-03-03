@@ -9,12 +9,14 @@ function parse_parts(
 
   const parts = line?.trim().split('=')
 
-  if (parts && parts.length !== 2) {
-    core.warning(`Failed to parse these parameters:${line}`)
-    return undefined
+  if (parts && parts.length < 2) {
+      core.warning(`Failed to parse these parameters: ${line}`)
+      return undefined
   }
 
-  return { name: parts[0].trim(), value: parts[1].trim() }
+  const [name, ...rest] = parts
+  const value = rest.join("=")
+  return { name: name.trim(), value: value.trim() }
 }
 
 export function parse_additional_parameters(
