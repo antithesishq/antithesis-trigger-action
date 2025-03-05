@@ -10,7 +10,7 @@ function parse_parts(
   const parts = line?.trim().split('=')
 
   if (parts && parts.length < 2) {
-    core.warning(`Failed to parse these parameters: ${line}`)
+    core.warning(`These parameters could not be parsed and will not be sent to the webhook: ${line}`)
     return undefined
   }
 
