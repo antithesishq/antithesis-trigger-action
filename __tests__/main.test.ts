@@ -78,6 +78,14 @@ describe('successful_params_parsing', () => {
 
     expect(params).toEqual({ p: 'v' })
   })
+
+  it('two line params with equal', async () => {
+    const params = main.parse_additional_parameters(`
+    p1='inner_value_1=1'
+    p2='v2'`)
+
+    expect(params).toEqual({ p1: "'inner_value_1=1'", p2: "'v2'" })
+  })
 })
 
 describe('successful_action', () => {
