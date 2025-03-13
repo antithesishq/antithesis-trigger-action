@@ -9,12 +9,16 @@ function parse_parts(
 
   const parts = line?.trim().split('=')
 
-  if (parts && parts.length !== 2) {
-    core.warning(`Failed to parse these parameters:${line}`)
+  if (parts && parts.length < 2) {
+    core.warning(
+      `These parameters could not be parsed and will not be sent to the webhook: ${line}`
+    )
     return undefined
   }
 
-  return { name: parts[0].trim(), value: parts[1].trim() }
+  const [name, ...rest] = parts
+  const value = rest.join('=')
+  return { name: name.trim(), value: value.trim() }
 }
 
 export function parse_additional_parameters(
