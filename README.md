@@ -32,7 +32,7 @@ This action takes the following inputs to configure its behavior. You can see an
       uses: antithesishq/antithesis-trigger-action@v0.5
       with:
         notebook_name: my-test-notebook-name
-        tenant: my-subdomain-name
+        tenant: my-tenant-name
         username: ${{ secrets.ANTITHESIS_USERNAME }}
         password: ${{ secrets.ANTITHESIS_PASSWORD }}
         github_token: ${{ secrets.GH_PAT }}
@@ -49,7 +49,7 @@ This action takes the following inputs to configure its behavior. You can see an
 ### Inputs
 
 - **notebook_name** : the name of your test that will be run (provided by Antithesis)
-- **tenant** : the subdomain for your tenant (e.g. `$TENANT_NAME.antithesis.com`)
+- **tenant** : your tenant's name (e.g. If your subdomain is $TENANT_NAME.antithesis.com, your tenant name is `$TENANT_NAME`)
 - **config_image** : The image version that Antithesis will pull from the container registry for the config image. This should be a single image version formatted in the same way as those in the antithesis.images parameter.
 - **images** : The image versions that Antithesis will use to build your test environment. The images are specified as an optional registry, a container name and either a digest (which is recommended) or a tag. A ‘;’ delimited list. Each entry is in this format: `[REGISTRY/]NAME[:TAG|@DIGEST]`.
 - **description** : A string description of your test run. The description will be in the headers of the generated report and of any emails triggered by the test run.
