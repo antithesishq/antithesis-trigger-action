@@ -1,6 +1,7 @@
 import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
+import curlirize from 'axios-curlirize'
 
 function parse_parts(
   line: string
@@ -112,6 +113,8 @@ export async function run(): Promise<void> {
     // Call into Anithesis
     const username = core.getInput('username')
     const password = core.getInput('password')
+
+    curlirize(axios)
 
     const result = await axios.post(url, body, {
       auth: {

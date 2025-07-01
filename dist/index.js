@@ -33496,6 +33496,7 @@ exports.run = run;
 const github_1 = __nccwpck_require__(3228);
 const core = __importStar(__nccwpck_require__(7484));
 const axios_1 = __importDefault(__nccwpck_require__(7269));
+const axios_curlirize_1 = __importDefault(__nccwpck_require__(3459));
 function parse_parts(line) {
     if (!line)
         return undefined;
@@ -33573,6 +33574,7 @@ async function run() {
         // Call into Anithesis
         const username = core.getInput('username');
         const password = core.getInput('password');
+        (0, axios_curlirize_1.default)(axios_1.default);
         const result = await axios_1.default.post(url, body, {
             auth: {
                 username,
@@ -40282,6 +40284,171 @@ module.exports = axios;
 
 /***/ }),
 
+/***/ 3459:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "default": () => (/* binding */ main)
+});
+
+;// CONCATENATED MODULE: ./node_modules/axios-curlirize/src/lib/CurlHelper.js
+class CurlHelper {
+  constructor(config) {
+    this.request = config;
+  }
+
+  getHeaders() {
+    let headers = this.request.headers,
+      curlHeaders = "";
+
+    // get the headers concerning the appropriate method (defined in the global axios instance)
+    if (headers.hasOwnProperty("common")) {
+      headers = this.request.headers[this.request.method];
+    }
+
+    // add any custom headers (defined upon calling methods like .get(), .post(), etc.)
+    for(let property in this.request.headers) {
+      if (
+        !["common", "delete", "get", "head", "patch", "post", "put"].includes(
+          property
+        )
+      ) {
+        headers[property] = this.request.headers[property];
+      }
+    }
+
+    for(let property in headers) {
+      if({}.hasOwnProperty.call(headers, property)) {
+        let header = `${property}:${headers[property]}`;
+        curlHeaders = `${curlHeaders} -H "${header}"`;
+      }
+    }
+
+    return curlHeaders.trim();
+  }
+
+  getMethod() {
+    return `-X ${this.request.method.toUpperCase()}`;
+  }
+
+  getBody() {
+    if (
+      typeof this.request.data !== "undefined" &&
+      this.request.data !== "" &&
+      this.request.data !== null &&
+      this.request.method.toUpperCase() !== "GET"
+    ) {
+      let data =
+        typeof this.request.data === "object" ||
+        Object.prototype.toString.call(this.request.data) === "[object Array]"
+          ? JSON.stringify(this.request.data)
+          : this.request.data;
+      return `--data '${data}'`.trim();
+    } else {
+      return "";
+    }
+  }
+
+  getUrl() {
+    if (this.request.baseURL) {
+      let baseUrl = this.request.baseURL
+      let url = this.request.url
+      let finalUrl = baseUrl + "/" + url
+      return finalUrl
+        .replace(/\/{2,}/g, '/')
+        .replace("http:/", "http://")
+        .replace("https:/", "https://")
+    }
+    return this.request.url;
+  }
+
+  getQueryString() {
+    if (this.request.paramsSerializer) {
+      const params = this.request.paramsSerializer(this.request.params)
+      if (!params || params.length === 0) return ''
+      if (params.startsWith('?')) return params
+      return `?${params}`
+    }
+    let params = ""
+    let i = 0
+
+    for(let param in this.request.params) {
+      if({}.hasOwnProperty.call(this.request.params, param)) {
+        params +=
+        i !== 0
+          ? `&${param}=${this.request.params[param]}`
+          : `?${param}=${this.request.params[param]}`;
+        i++;
+      }
+    }
+
+    return params;
+  }
+
+  getBuiltURL() {
+    let url = this.getUrl();
+
+    if (this.getQueryString() !== "") {
+      url += this.getQueryString();
+    }
+
+    return url.trim();
+  }
+
+  generateCommand() {
+    return `curl ${this.getMethod()} "${this.getBuiltURL()}" ${this.getHeaders()} ${this.getBody()}`
+      .trim()
+      .replace(/\s{2,}/g, " ");
+  }
+}
+
+;// CONCATENATED MODULE: ./node_modules/axios-curlirize/src/main.js
+
+
+function defaultLogCallback(curlResult, err) {
+  const { command } = curlResult;
+  if (err) {
+    console.error(err);
+  } else {
+    console.info(command);
+  }
+}
+
+/* harmony default export */ const main = ((instance, callback = defaultLogCallback) => {
+  instance.interceptors.request.use((req) => {
+    try {
+      const curl = new CurlHelper(req);
+      req.curlObject = curl;
+      req.curlCommand = curl.generateCommand();
+      req.clearCurl = () => {
+        delete req.curlObject;
+        delete req.curlCommand;
+        delete req.clearCurl;
+      };
+    } catch (err) {
+      // Even if the axios middleware is stopped, no error should occur outside.
+      callback(null, err);
+    } finally {
+      if (req.curlirize !== false) {
+        callback({
+          command: req.curlCommand,
+          object: req.curlObject
+        });
+      }
+      return req;
+    }
+  });
+});
+
+
+
+/***/ }),
+
 /***/ 1813:
 /***/ ((module) => {
 
@@ -40323,6 +40490,34 @@ module.exports = /*#__PURE__*/JSON.parse('{"application/1d-interleaved-parityfec
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
