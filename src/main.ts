@@ -122,6 +122,9 @@ export async function run(): Promise<void> {
 
     if (result.status < 200 || result.status >= 300) {
       const msg = `Failed to submit request, recieved a non-2XX response code : ${result.status}`
+
+      core.error(JSON.stringify(result))
+
       core.error(msg)
       core.setFailed(msg)
       return
