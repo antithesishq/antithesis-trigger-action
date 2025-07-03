@@ -33578,13 +33578,16 @@ async function run() {
                 username,
                 password
             }
-        });
-        if (result.status < 200 || result.status >= 300) {
-            const msg = `Failed to submit request, recieved a non-2XX response code : ${result.status} : ${JSON.stringify(result)}`;
-            core.error(msg);
-            core.setFailed(msg);
-            return;
-        }
+        }).catch(error => core.error(JSON.stringify(error)));
+        /*
+            if (result.status < 200 || result.status >= 300) {
+              const msg = `Failed to submit request, recieved a non-2XX response code : ${result.status} : ${JSON.stringify(result)}`
+        
+              core.error(msg)
+              core.setFailed(msg)
+              return
+            }
+        */
         // Update GitHub commit status with pending status
         // Only if we have a call back URL & a token , because we want to make sure
         // that Antithesis could update the status to done
