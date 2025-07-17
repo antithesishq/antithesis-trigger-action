@@ -2,9 +2,9 @@ import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
 
-function parse_parts(
+function parse_parts (
   line: string
-): { name: string; value: string } | undefined {
+): { name: string, value: string } | undefined {
   if (!line) return undefined
 
   const parts = line?.trim().split('=')
@@ -21,7 +21,7 @@ function parse_parts(
   return { name: name.trim(), value: value.trim() }
 }
 
-export function parse_additional_parameters(
+export function parse_additional_parameters (
   params_string: string
 ): Record<string, string> {
   const result: Record<string, string> = {}
@@ -29,7 +29,7 @@ export function parse_additional_parameters(
   if (params_string) {
     for (const line of params_string.split(/\r|\n/)) {
       const parts = parse_parts(line)
-      if (parts) {
+      if (parts != null) {
         result[parts.name] = parts.value
       }
     }
@@ -41,7 +41,7 @@ export function parse_additional_parameters(
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-export async function run(): Promise<void> {
+export async function run (): Promise<void> {
   try {
     // Build the request URL
     const tenant: string = core.getInput('tenant')
@@ -132,8 +132,7 @@ export async function run(): Promise<void> {
     // that Antithesis could update the status to done
     if (callback_url !== undefined && github_token !== undefined) {
       let owner = context?.payload?.repository?.owner?.name
-      if (owner === undefined)
-        owner = context?.payload?.repository?.owner?.login
+      if (owner === undefined) { owner = context?.payload?.repository?.owner?.login }
 
       const repo = context?.payload?.repository?.name
 
