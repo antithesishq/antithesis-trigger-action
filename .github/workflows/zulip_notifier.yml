@@ -27,7 +27,7 @@ jobs:
           api-key: ${{ secrets.ZULIP_API_KEY }}
           email: ${{ secrets.ZULIP_BOT_EMAIL }}
           organization-url: ${{ secrets.ZULIP_ORG_URL }}
-          to: "Commits"
-          type: "stream"
+          to: 'Commits'
+          type: 'stream'
           topic: ${{ steps.generate-msg.outputs.topic }}
           content: ${{ steps.generate-msg.outputs.msg }}

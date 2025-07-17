@@ -30,11 +30,15 @@ inputs:
     required: true
     default: ''
   config_image:
-    description: 'The image version that Antithesis will pull from the container registry for the config image.'
+    description:
+      'The image version that Antithesis will pull from the container registry
+      for the config image.'
     required: false
     default: ''
   images:
-    description: 'The containers & digests that Antithesis tests will run on. If not specified the values will be inferred from the test.'
+    description:
+      'The containers & digests that Antithesis tests will run on. If not
+      specified the values will be inferred from the test.'
     required: false
     default: ''
   description:
@@ -42,15 +46,23 @@ inputs:
     required: false
     default: ''
   test_name:
-    description: 'A string representing the test name being run. This is required when running multiple tests from the same commit.'
+    description:
+      'A string representing the test name being run. This is required when
+      running multiple tests from the same commit.'
     required: false
     default: ''
   email_recipients:
-    description: 'A semi-colon delimited list of the email addresses for the recipients who will be emailed links to the triage report produced by this test run. If this parameter is not specified, emails will be sent to the default users set up for the test.'
+    description:
+      'A semi-colon delimited list of the email addresses for the recipients who
+      will be emailed links to the triage report produced by this test run. If
+      this parameter is not specified, emails will be sent to the default users
+      set up for the test.'
     required: false
     default: ''
   additional_parameters:
-    description: 'A newline-seperated list of additional parameters to be sent to the test run.'
+    description:
+      'A newline-seperated list of additional parameters to be sent to the test
+      run.'
     required: false
     default: ''
 
