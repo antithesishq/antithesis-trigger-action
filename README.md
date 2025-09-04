@@ -27,7 +27,7 @@ example usage here in our demo project
    secrets and variables. Navigate to your repository action secrets settings
    found
    [here](https://github.com/<org_name>/<repo_name>/settings/secrets/actions).
-   Add a new repository secret, and give it the name `ANTITHESIS_USER_NAME` to
+   Add a new repository secret, and give it the name `ANTITHESIS_USERNAME` to
    store your Antithesis username. Add another secret, and give it the name
    `ANTITHESIS_PASSWORD` to store your Antithesis password.
 
