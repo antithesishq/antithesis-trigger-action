@@ -37,6 +37,23 @@ export function parse_additional_parameters(
   return result
 }
 
+const build_creator_params = (): Record<string, string> => {
+  const creator_params: Record<string, string> = {
+    type: 'GitHubAction',
+    event_name: context?.eventName,
+    sha: context?.sha,
+    ref: context?.ref,
+    workflow: context?.workflow,
+    action: context?.action,
+    actor: context?.actor
+  }
+  return Object.fromEntries(
+    Object.entries(creator_params)
+      .filter(([, v]: [string, string]) => v !== undefined)
+      .map(([k, v]: [string, string]) => [`antithesis.creator.${k}`, v])
+  )
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -96,6 +113,7 @@ export async function run(): Promise<void> {
 
     const body = {
       params: {
+        ...build_creator_params(),
         'antithesis.integrations.type': 'github',
         'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
@@ -128,7 +146,7 @@ export async function run(): Promise<void> {
     }
 
     // Update GitHub commit status with pending status
-    // Only if we have a call back URL & a token , because we want to make sure
+    // Only if we have a callback URL & a token, because we want to make sure
     // that Antithesis could update the status to done
     if (callback_url !== undefined && github_token !== undefined) {
       let owner = context?.payload?.repository?.owner?.name

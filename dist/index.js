@@ -34597,6 +34597,20 @@ function parse_additional_parameters(params_string) {
     }
     return result;
 }
+const build_creator_params = () => {
+    const creator_params = {
+        type: 'GitHubAction',
+        event_name: github_1.context?.eventName,
+        sha: github_1.context?.sha,
+        ref: github_1.context?.ref,
+        workflow: github_1.context?.workflow,
+        action: github_1.context?.action,
+        actor: github_1.context?.actor
+    };
+    return Object.fromEntries(Object.entries(creator_params)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [`antithesis.creator.${k}`, v]));
+};
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -34635,6 +34649,7 @@ async function run() {
         const test_name = core.getInput('test_name');
         const body = {
             params: {
+                ...build_creator_params(),
                 'antithesis.integrations.type': 'github',
                 'antithesis.integrations.callback_url': callback_url,
                 'antithesis.integrations.token': github_token,
@@ -34663,7 +34678,7 @@ async function run() {
             return;
         }
         // Update GitHub commit status with pending status
-        // Only if we have a call back URL & a token , because we want to make sure
+        // Only if we have a callback URL & a token, because we want to make sure
         // that Antithesis could update the status to done
         if (callback_url !== undefined && github_token !== undefined) {
             let owner = github_1.context?.payload?.repository?.owner?.name;
