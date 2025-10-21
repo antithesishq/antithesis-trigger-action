@@ -34597,20 +34597,7 @@ function parse_additional_parameters(params_string) {
     }
     return result;
 }
-const build_creator_params = () => {
-    const creator_params = {
-        type: 'GitHubAction',
-        event_name: github_1.context?.eventName,
-        sha: github_1.context?.sha,
-        ref: github_1.context?.ref,
-        workflow: github_1.context?.workflow,
-        action: github_1.context?.action,
-        actor: github_1.context?.actor
-    };
-    return Object.fromEntries(Object.entries(creator_params)
-        .filter(([, v]) => v !== undefined)
-        .map(([k, v]) => [`antithesis.creator.${k}`, v]));
-};
+const THIS_ACTION = 'antithesis-trigger-action';
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -34629,7 +34616,7 @@ async function run() {
             ? `${statuses_url.replace('{sha}', '')}${sha}`
             : undefined;
         core.info(`Callback Url: ${callback_url}`);
-        // Read images informaiton
+        // Read images information
         const images = core.getInput('images');
         const config_image = core.getInput('config_image');
         core.info(`Images: ${images}`);
@@ -34640,6 +34627,7 @@ async function run() {
         // Build the request body
         const github_token = core.getInput('github_token');
         // Extract the branch
+        // (nb: the ref may be a branch *or a tag!*)
         const branch = github_1.context.ref?.replace('refs/heads/', '') ?? '';
         core.info(`Source: ${branch}`);
         // Extract email list
@@ -34649,10 +34637,39 @@ async function run() {
         const test_name = core.getInput('test_name');
         const body = {
             params: {
-                ...build_creator_params(),
-                'antithesis.integrations.type': 'github',
-                'antithesis.integrations.callback_url': callback_url,
-                'antithesis.integrations.token': github_token,
+                'run.creator_name': github_1.context?.actor,
+                // run.team can't be inferred
+                // run.cron_schedule probably can't be inferred
+                'run.caller_name': THIS_ACTION,
+                'run.caller_type': 'github_action',
+                // vcs.system_name can't be inferred
+                'vcs.repo_type': 'github',
+                'vcs.repo_owner': github_1.context?.payload.repository?.owner.login,
+                'vcs.repo_name': github_1.context?.payload.repository?.name,
+                'vcs.repo_branch': branch,
+                // NOTE: the GITHUB_SHA for PRs is the SHA of the branch point, not the PR!
+                // https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
+                'vcs.version_id': sha,
+                // TODO: these require a query to github (commits API)
+                'vcs.version_link': 'https://antithesis.com',
+                'vcs.version_timestamp': '1970-01-01T00:00:00Z',
+                'vcs.version_message': 'fix: enable dosh distimming',
+                // TODO: to get a PR's info, we need its number...
+                // ...(false // (condition: is this action being called on a PR?)
+                //   ? {
+                //       'vcs.pr_link': 'TODO',
+                //       'vcs.pr_id': 'TODO',
+                //       'vcs.pr_title': 'TODO',
+                //       'vcs.pr_owner': 'TODO'
+                //     }
+                //   : {}),
+                // these are deprecated:
+                //'antithesis.integrations.type': 'github',
+                //'antithesis.integrations.callback_url': callback_url,
+                //'antithesis.integrations.token': github_token,
+                // these aren't:
+                'antithesis.integrations.github.callback_url': callback_url,
+                'antithesis.integrations.github.token': github_token,
                 'antithesis.images': images,
                 'antithesis.config_image': config_image,
                 'antithesis.source': branch,
@@ -34662,7 +34679,7 @@ async function run() {
                 ...additional_parameters
             }
         };
-        // Call into Anithesis
+        // Call into Antithesis
         const username = core.getInput('username');
         const password = core.getInput('password');
         const result = await axios_1.default.post(url, body, {

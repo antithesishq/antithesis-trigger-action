@@ -37,22 +37,7 @@ export function parse_additional_parameters(
   return result
 }
 
-const build_creator_params = (): Record<string, string> => {
-  const creator_params: Record<string, string> = {
-    type: 'GitHubAction',
-    event_name: context?.eventName,
-    sha: context?.sha,
-    ref: context?.ref,
-    workflow: context?.workflow,
-    action: context?.action,
-    actor: context?.actor
-  }
-  return Object.fromEntries(
-    Object.entries(creator_params)
-      .filter(([, v]: [string, string]) => v !== undefined)
-      .map(([k, v]: [string, string]) => [`antithesis.creator.${k}`, v])
-  )
-}
+const THIS_ACTION = 'antithesis-trigger-action'
 
 /**
  * The main function for the action.
@@ -79,7 +64,7 @@ export async function run(): Promise<void> {
 
     core.info(`Callback Url: ${callback_url}`)
 
-    // Read images informaiton
+    // Read images information
     const images = core.getInput('images')
     const config_image = core.getInput('config_image')
 
@@ -96,6 +81,7 @@ export async function run(): Promise<void> {
     const github_token = core.getInput('github_token')
 
     // Extract the branch
+    // (nb: the ref may be a branch *or a tag!*)
     const branch = context.ref?.replace('refs/heads/', '') ?? ''
 
     core.info(`Source: ${branch}`)
@@ -113,10 +99,44 @@ export async function run(): Promise<void> {
 
     const body = {
       params: {
-        ...build_creator_params(),
-        'antithesis.integrations.type': 'github',
-        'antithesis.integrations.callback_url': callback_url,
-        'antithesis.integrations.token': github_token,
+        'run.creator_name': context?.actor,
+        // run.team can't be inferred
+        // run.cron_schedule probably can't be inferred
+        'run.caller_name': THIS_ACTION,
+        'run.caller_type': 'github_action',
+        // vcs.system_name can't be inferred
+        'vcs.repo_type': 'github',
+        'vcs.repo_owner': context?.payload.repository?.owner.login,
+        'vcs.repo_name': context?.payload.repository?.name,
+        'vcs.repo_branch': branch,
+        // NOTE: the GITHUB_SHA for PRs is the SHA of the branch point, not the PR!
+        // https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
+        'vcs.version_id': sha,
+
+        // TODO: these require a query to github (commits API)
+        'vcs.version_link': 'https://antithesis.com',
+        'vcs.version_timestamp': '1970-01-01T00:00:00Z',
+        'vcs.version_message': 'fix: enable dosh distimming',
+
+        // TODO: to get a PR's info, we need its number...
+        // ...(false // (condition: is this action being called on a PR?)
+        //   ? {
+        //       'vcs.pr_link': 'TODO',
+        //       'vcs.pr_id': 'TODO',
+        //       'vcs.pr_title': 'TODO',
+        //       'vcs.pr_owner': 'TODO'
+        //     }
+        //   : {}),
+
+        // these are deprecated:
+        //'antithesis.integrations.type': 'github',
+        //'antithesis.integrations.callback_url': callback_url,
+        //'antithesis.integrations.token': github_token,
+
+        // these aren't:
+        'antithesis.integrations.github.callback_url': callback_url,
+        'antithesis.integrations.github.token': github_token,
+
         'antithesis.images': images,
         'antithesis.config_image': config_image,
         'antithesis.source': branch,
@@ -127,7 +147,7 @@ export async function run(): Promise<void> {
       }
     }
 
-    // Call into Anithesis
+    // Call into Antithesis
     const username = core.getInput('username')
     const password = core.getInput('password')
 
