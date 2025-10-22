@@ -34638,11 +34638,11 @@ async function run() {
         const body = {
             params: {
                 'run.creator_name': github_1.context?.actor,
-                // run.team can't be inferred
+                'run.team': core.getInput('team'),
                 // run.cron_schedule probably can't be inferred
                 'run.caller_name': THIS_ACTION,
                 'run.caller_type': 'github_action',
-                // vcs.system_name can't be inferred
+                'vcs.system_name': core.getInput('system_name'),
                 'vcs.repo_type': 'github',
                 'vcs.repo_owner': github_1.context?.payload.repository?.owner.login,
                 'vcs.repo_name': github_1.context?.payload.repository?.name,
