@@ -1,5 +1,9 @@
 import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
+import type {
+  PullRequest,
+  SimpleCommit
+} from '@octokit/webhooks-definitions/schema'
 import axios from 'axios'
 
 function parse_parts(
@@ -38,6 +42,53 @@ export function parse_additional_parameters(
 }
 
 const THIS_ACTION = 'antithesis-trigger-action'
+
+type CommitInfo = {
+  'vcs.version_id': string
+  'vcs.version_link': string
+  'vcs.version_timestamp': string
+  'vcs.version_message': string
+}
+
+function get_commit_info(): CommitInfo | Record<string, never> {
+  const commit = context?.payload.head_commit as SimpleCommit | undefined
+  if (commit === undefined) return {}
+
+  const repo_url = context?.payload.repository?.html_url
+
+  return {
+    'vcs.version_id': commit.id, // CHECKME: is this the sha of the commit on which the workload was run?
+    'vcs.version_link':
+      repo_url !== undefined ? `${repo_url}/tree/${commit.id}` : '',
+    'vcs.version_timestamp': commit.timestamp,
+    'vcs.version_message': commit.message
+  }
+}
+
+type PRInfo = {
+  'vcs.pr_link': string
+  'vcs.pr_id': number
+  'vcs.pr_title': string
+  'vcs.pr_owner': string
+}
+
+function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
+  const pr = context?.payload.pull_request as PullRequest | undefined
+  if (pr === undefined) return {}
+  // Override `get_commit_info()`: we only care about the feature commit.
+  // Note that some commit details (timestamp, message) aren't obviously exposed without
+  // making a separate query to GitHub.
+  return {
+    'vcs.version_id': pr.head.sha,
+    'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
+    'vcs.version_timestamp': pr.updated_at,
+    'vcs.version_message': `Pull request from ${pr.head.label}`,
+    'vcs.pr_link': pr.html_url,
+    'vcs.pr_id': pr.number,
+    'vcs.pr_title': pr.title,
+    'vcs.pr_owner': pr.user.login
+  }
+}
 
 /**
  * The main function for the action.
@@ -101,7 +152,7 @@ export async function run(): Promise<void> {
       params: {
         'run.creator_name': context?.actor,
         'run.team': core.getInput('team'),
-        // run.cron_schedule probably can't be inferred
+        'run.cron_schedule': core.getInput('cron_schedule'),
         'run.caller_name': THIS_ACTION,
         'run.caller_type': 'github_action',
         'vcs.system_name': core.getInput('system_name'),
@@ -109,24 +160,9 @@ export async function run(): Promise<void> {
         'vcs.repo_owner': context?.payload.repository?.owner.login,
         'vcs.repo_name': context?.payload.repository?.name,
         'vcs.repo_branch': branch,
-        // NOTE: the GITHUB_SHA for PRs is the SHA of the branch point, not the PR!
-        // https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
-        'vcs.version_id': sha,
 
-        // TODO: these require a query to github (commits API)
-        'vcs.version_link': 'https://antithesis.com',
-        'vcs.version_timestamp': '1970-01-01T00:00:00Z',
-        'vcs.version_message': 'fix: enable dosh distimming',
-
-        // TODO: to get a PR's info, we need its number...
-        // ...(false // (condition: is this action being called on a PR?)
-        //   ? {
-        //       'vcs.pr_link': 'TODO',
-        //       'vcs.pr_id': 'TODO',
-        //       'vcs.pr_title': 'TODO',
-        //       'vcs.pr_owner': 'TODO'
-        //     }
-        //   : {}),
+        ...get_commit_info(),
+        ...get_pr_info(),
 
         // these are deprecated:
         //'antithesis.integrations.type': 'github',
