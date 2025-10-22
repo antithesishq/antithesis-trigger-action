@@ -123,7 +123,6 @@ function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
  */
 export async function run(): Promise<void> {
   try {
-    core.info(`Calling event name: ${context?.eventName}`)
     // Build the request URL
     const tenant: string = core.getInput('tenant')
     const notebook_name: string = core.getInput('notebook_name')
@@ -271,4 +270,6 @@ export async function run(): Promise<void> {
     core.error(`Failed to submit request : ${error}`)
     if (error instanceof Error) core.setFailed(error.message)
   }
+
+  core.info(`Called by event name: ${context?.eventName}`)
 }

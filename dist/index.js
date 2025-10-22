@@ -34765,6 +34765,7 @@ async function run() {
         if (error instanceof Error)
             core.setFailed(error.message);
     }
+    core.info(`Called by event name: ${github_1.context?.eventName}`);
 }
 
 
