@@ -52,17 +52,30 @@ type CommitInfo = {
 
 function get_commit_info(): CommitInfo | Record<string, never> {
   const commit = context?.payload.head_commit as SimpleCommit | undefined
-  if (commit === undefined) return {}
-
+  if (commit === undefined) {
+    core.info('The event that invoked this Action has no `head_commit`.')
+    return {}
+  }
   const repo_url = context?.payload.repository?.html_url
 
-  return {
+  const commit_info = {
     'vcs.version_id': commit.id, // CHECKME: is this the sha of the commit on which the workload was run?
     'vcs.version_link':
       repo_url !== undefined ? `${repo_url}/tree/${commit.id}` : '',
     'vcs.version_timestamp': commit.timestamp,
     'vcs.version_message': commit.message
   }
+
+  const commit_info_pretty = [
+    'Commit info:',
+    ...Object.keys(commit_info).map(
+      key => `\t${key}: ${commit_info[key as keyof typeof commit_info]}`
+    )
+  ].join('\n')
+
+  core.info(commit_info_pretty)
+
+  return commit_info
 }
 
 type PRInfo = {
@@ -74,11 +87,14 @@ type PRInfo = {
 
 function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
   const pr = context?.payload.pull_request as PullRequest | undefined
-  if (pr === undefined) return {}
+  if (pr === undefined) {
+    core.info('The event that invoked this Action has no `pull_request`.')
+    return {}
+  }
   // Override `get_commit_info()`: we only care about the feature commit.
   // Note that some commit details (timestamp, message) aren't obviously exposed without
   // making a separate query to GitHub.
-  return {
+  const pr_info = {
     'vcs.version_id': pr.head.sha,
     'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
     'vcs.version_timestamp': pr.updated_at,
@@ -88,6 +104,17 @@ function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
     'vcs.pr_title': pr.title,
     'vcs.pr_owner': pr.user.login
   }
+
+  const pr_info_pretty = [
+    'PR info:',
+    ...Object.keys(pr_info).map(
+      key => `\t${key}: ${pr_info[key as keyof typeof pr_info]}`
+    )
+  ].join('\n')
+
+  core.info(pr_info_pretty)
+
+  return pr_info
 }
 
 /**
