@@ -34598,18 +34598,23 @@ function parse_additional_parameters(params_string) {
     return result;
 }
 const THIS_ACTION = 'antithesis-trigger-action';
+// CHECKME: This works on workflow_dispatch. Does it work on other events?
 function get_commit_info() {
-    const commit = github_1.context?.payload.head_commit;
-    if (commit === undefined) {
-        core.info('The event that invoked this Action has no `head_commit`.');
+    if (github_1.context === undefined) {
+        core.info("Can't get commit info: no context received?!");
         return {};
     }
-    const repo_url = github_1.context?.payload.repository?.html_url;
+    /*
+      Hand-constructing a link here is subpar, but
+      - using the "Get a commit" API requires read access to the repo
+      - that same API also expects you to hardcode part of request bodies!
+    */
+    const commit_link = `${github_1.context.serverUrl}/${github_1.context.repo.owner}/${github_1.context.repo.repo}/tree/${github_1.context.sha}`;
     const commit_info = {
-        'vcs.version_id': commit.id, // CHECKME: is this the sha of the commit on which the workload was run?
-        'vcs.version_link': repo_url !== undefined ? `${repo_url}/tree/${commit.id}` : '',
-        'vcs.version_timestamp': commit.timestamp,
-        'vcs.version_message': commit.message
+        'vcs.version_id': github_1.context.sha,
+        'vcs.version_link': commit_link
+        // 'vcs.version_timestamp': commit.timestamp,
+        // 'vcs.version_message': commit.message
     };
     const commit_info_pretty = [
         'Commit info:',
@@ -34630,8 +34635,8 @@ function get_pr_info() {
     const pr_info = {
         'vcs.version_id': pr.head.sha,
         'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
-        'vcs.version_timestamp': pr.updated_at,
-        'vcs.version_message': `Pull request from ${pr.head.label}`,
+        // 'vcs.version_timestamp': pr.updated_at,
+        // 'vcs.version_message': `Pull request from ${pr.head.label}`,
         'vcs.pr_link': pr.html_url,
         'vcs.pr_id': pr.number,
         'vcs.pr_title': pr.title,

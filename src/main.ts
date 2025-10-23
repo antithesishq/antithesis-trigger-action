@@ -1,9 +1,6 @@
 import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
-import type {
-  PullRequest,
-  SimpleCommit
-} from '@octokit/webhooks-definitions/schema'
+import type { PullRequest } from '@octokit/webhooks-definitions/schema'
 import axios from 'axios'
 
 function parse_parts(
@@ -46,24 +43,29 @@ const THIS_ACTION = 'antithesis-trigger-action'
 type CommitInfo = {
   'vcs.version_id': string
   'vcs.version_link': string
-  'vcs.version_timestamp': string
-  'vcs.version_message': string
+  // 'vcs.version_timestamp': string
+  // 'vcs.version_message': string
 }
 
+// CHECKME: This works on workflow_dispatch. Does it work on other events?
 function get_commit_info(): CommitInfo | Record<string, never> {
-  const commit = context?.payload.head_commit as SimpleCommit | undefined
-  if (commit === undefined) {
-    core.info('The event that invoked this Action has no `head_commit`.')
+  if (context === undefined) {
+    core.info("Can't get commit info: no context received?!")
     return {}
   }
-  const repo_url = context?.payload.repository?.html_url
+
+  /*
+    Hand-constructing a link here is subpar, but
+    - using the "Get a commit" API requires read access to the repo
+    - that same API also expects you to hardcode part of request bodies!
+  */
+  const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/tree/${context.sha}`
 
   const commit_info = {
-    'vcs.version_id': commit.id, // CHECKME: is this the sha of the commit on which the workload was run?
-    'vcs.version_link':
-      repo_url !== undefined ? `${repo_url}/tree/${commit.id}` : '',
-    'vcs.version_timestamp': commit.timestamp,
-    'vcs.version_message': commit.message
+    'vcs.version_id': context.sha,
+    'vcs.version_link': commit_link
+    // 'vcs.version_timestamp': commit.timestamp,
+    // 'vcs.version_message': commit.message
   }
 
   const commit_info_pretty = [
@@ -97,8 +99,8 @@ function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
   const pr_info = {
     'vcs.version_id': pr.head.sha,
     'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
-    'vcs.version_timestamp': pr.updated_at,
-    'vcs.version_message': `Pull request from ${pr.head.label}`,
+    // 'vcs.version_timestamp': pr.updated_at,
+    // 'vcs.version_message': `Pull request from ${pr.head.label}`,
     'vcs.pr_link': pr.html_url,
     'vcs.pr_id': pr.number,
     'vcs.pr_title': pr.title,
