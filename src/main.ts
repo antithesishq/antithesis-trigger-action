@@ -271,5 +271,6 @@ export async function run(): Promise<void> {
     if (error instanceof Error) core.setFailed(error.message)
   }
 
-  core.info(`Called by event name: ${context?.eventName}`)
+  const ctx_string = JSON.stringify(context, null, 2)
+  core.info(`Full context: ${ctx_string}`)
 }

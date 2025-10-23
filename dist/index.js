@@ -34765,7 +34765,8 @@ async function run() {
         if (error instanceof Error)
             core.setFailed(error.message);
     }
-    core.info(`Called by event name: ${github_1.context?.eventName}`);
+    const ctx_string = JSON.stringify(github_1.context, null, 2);
+    core.info(`Full context: ${ctx_string}`);
 }
 
 
