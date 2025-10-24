@@ -43,41 +43,18 @@ const THIS_ACTION = 'antithesis-trigger-action'
 type CommitInfo = {
   'vcs.version_id': string
   'vcs.version_link': string
-  // 'vcs.version_timestamp': string
-  // 'vcs.version_message': string
 }
 
-// CHECKME: This works on workflow_dispatch. Does it work on other events?
 function get_commit_info(): CommitInfo | Record<string, never> {
   if (context === undefined) {
     core.info("Can't get commit info: no context received?!")
     return {}
   }
-
-  /*
-    Hand-constructing a link here is subpar, but
-    - using the "Get a commit" API requires read access to the repo
-    - that same API also expects you to hardcode part of request bodies!
-  */
-  const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/tree/${context.sha}`
-
-  const commit_info = {
+  const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`
+  return {
     'vcs.version_id': context.sha,
     'vcs.version_link': commit_link
-    // 'vcs.version_timestamp': commit.timestamp,
-    // 'vcs.version_message': commit.message
   }
-
-  const commit_info_pretty = [
-    'Commit info:',
-    ...Object.keys(commit_info).map(
-      key => `\t${key}: ${commit_info[key as keyof typeof commit_info]}`
-    )
-  ].join('\n')
-
-  core.info(commit_info_pretty)
-
-  return commit_info
 }
 
 type PRInfo = {
@@ -94,29 +71,14 @@ function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
     return {}
   }
   // Override `get_commit_info()`: we only care about the feature commit.
-  // Note that some commit details (timestamp, message) aren't obviously exposed without
-  // making a separate query to GitHub.
-  const pr_info = {
+  return {
     'vcs.version_id': pr.head.sha,
     'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
-    // 'vcs.version_timestamp': pr.updated_at,
-    // 'vcs.version_message': `Pull request from ${pr.head.label}`,
     'vcs.pr_link': pr.html_url,
     'vcs.pr_id': pr.number,
     'vcs.pr_title': pr.title,
     'vcs.pr_owner': pr.user.login
   }
-
-  const pr_info_pretty = [
-    'PR info:',
-    ...Object.keys(pr_info).map(
-      key => `\t${key}: ${pr_info[key as keyof typeof pr_info]}`
-    )
-  ].join('\n')
-
-  core.info(pr_info_pretty)
-
-  return pr_info
 }
 
 /**
@@ -272,7 +234,4 @@ export async function run(): Promise<void> {
     core.error(`Failed to submit request : ${error}`)
     if (error instanceof Error) core.setFailed(error.message)
   }
-
-  const ctx_string = JSON.stringify(context, null, 2)
-  core.info(`Full context: ${ctx_string}`)
 }

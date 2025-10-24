@@ -34598,30 +34598,16 @@ function parse_additional_parameters(params_string) {
     return result;
 }
 const THIS_ACTION = 'antithesis-trigger-action';
-// CHECKME: This works on workflow_dispatch. Does it work on other events?
 function get_commit_info() {
     if (github_1.context === undefined) {
         core.info("Can't get commit info: no context received?!");
         return {};
     }
-    /*
-      Hand-constructing a link here is subpar, but
-      - using the "Get a commit" API requires read access to the repo
-      - that same API also expects you to hardcode part of request bodies!
-    */
-    const commit_link = `${github_1.context.serverUrl}/${github_1.context.repo.owner}/${github_1.context.repo.repo}/tree/${github_1.context.sha}`;
-    const commit_info = {
+    const commit_link = `${github_1.context.serverUrl}/${github_1.context.repo.owner}/${github_1.context.repo.repo}/commit/${github_1.context.sha}`;
+    return {
         'vcs.version_id': github_1.context.sha,
         'vcs.version_link': commit_link
-        // 'vcs.version_timestamp': commit.timestamp,
-        // 'vcs.version_message': commit.message
     };
-    const commit_info_pretty = [
-        'Commit info:',
-        ...Object.keys(commit_info).map(key => `\t${key}: ${commit_info[key]}`)
-    ].join('\n');
-    core.info(commit_info_pretty);
-    return commit_info;
 }
 function get_pr_info() {
     const pr = github_1.context?.payload.pull_request;
@@ -34630,24 +34616,14 @@ function get_pr_info() {
         return {};
     }
     // Override `get_commit_info()`: we only care about the feature commit.
-    // Note that some commit details (timestamp, message) aren't obviously exposed without
-    // making a separate query to GitHub.
-    const pr_info = {
+    return {
         'vcs.version_id': pr.head.sha,
         'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
-        // 'vcs.version_timestamp': pr.updated_at,
-        // 'vcs.version_message': `Pull request from ${pr.head.label}`,
         'vcs.pr_link': pr.html_url,
         'vcs.pr_id': pr.number,
         'vcs.pr_title': pr.title,
         'vcs.pr_owner': pr.user.login
     };
-    const pr_info_pretty = [
-        'PR info:',
-        ...Object.keys(pr_info).map(key => `\t${key}: ${pr_info[key]}`)
-    ].join('\n');
-    core.info(pr_info_pretty);
-    return pr_info;
 }
 /**
  * The main function for the action.
@@ -34770,8 +34746,6 @@ async function run() {
         if (error instanceof Error)
             core.setFailed(error.message);
     }
-    const ctx_string = JSON.stringify(github_1.context, null, 2);
-    core.info(`Full context: ${ctx_string}`);
 }
 
 
