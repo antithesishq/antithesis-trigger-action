@@ -23,6 +23,35 @@ let setFailedMock: jest.SpyInstance
 let axiosMock: jest.SpyInstance
 let createCommitStatusMock: jest.SpyInstance
 
+describe('reasonable_pr_info', () => {
+  it('undefined context.payload.pull_request returns {}', async () => {
+    github.context.payload.pull_request = undefined
+    expect(main.get_pr_info()).toEqual({})
+  })
+
+  it("mostly-empty payload.pull_request doesn't override commit info", async () => {
+    github.context.payload.pull_request = { number: 1 }
+    const pr_info = main.get_pr_info()
+    expect(pr_info).not.toHaveProperty(['vcs.version_id'])
+    expect(pr_info).not.toHaveProperty(['vcs.version_link'])
+  })
+
+  it('payload.pull_request overrides commit info if possible', async () => {
+    github.context.payload.pull_request = {
+      head: {
+        sha: 'deadbeef',
+        repo: {
+          html_url: 'https://github.com'
+        }
+      },
+      number: 1
+    }
+    const pr_info = main.get_pr_info()
+    expect(pr_info).toHaveProperty(['vcs.version_id'])
+    expect(pr_info).toHaveProperty(['vcs.version_link'])
+  })
+})
+
 describe('successful_params_parsing', () => {
   it('empty params', async () => {
     const params = main.parse_additional_parameters(``)

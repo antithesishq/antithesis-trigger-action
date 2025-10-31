@@ -34613,14 +34613,19 @@ function get_pr_info() {
         core.info('The event that invoked this Action has no `pull_request`.');
         return {};
     }
-    // Override `get_commit_info()`: we only care about the feature commit.
+    // Possibly override `get_commit_info()`: we only care about the feature commit.
+    const commit_info_override = pr.head?.sha !== undefined && pr.head?.repo.html_url !== undefined
+        ? {
+            'vcs.version_id': pr.head?.sha,
+            'vcs.version_link': `${pr.head?.repo.html_url}/commit/${pr.head?.sha}`
+        }
+        : {};
     return {
-        'vcs.version_id': pr.head.sha,
-        'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`,
+        ...commit_info_override,
         'vcs.pr_link': pr.html_url,
         'vcs.pr_id': pr.number,
         'vcs.pr_title': pr.title,
-        'vcs.pr_owner': pr.user.login
+        'vcs.pr_owner': pr.user?.login
     };
 }
 /**
