@@ -153,7 +153,7 @@ parameter2=value2
       .mockImplementation()
   })
 
-  it('calls Anithesis', async () => {
+  it('calls Antithesis', async () => {
     axiosMock.mockImplementation(() => {
       return {
         status: 202
@@ -187,7 +187,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('calls Anithesis even when no callback url', async () => {
+  it('calls Antithesis even when no callback url', async () => {
     github.context.payload = {
       repository: {
         name: 'repo_name',
@@ -223,7 +223,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('calls Anithesis even when no ref specified', async () => {
+  it('calls Antithesis even when no ref specified', async () => {
     github.context.payload = {
       repository: {
         name: 'repo_name',
@@ -261,7 +261,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('calls Anithesis when repo owner name is not specified', async () => {
+  it('calls Antithesis when repo owner name is not specified', async () => {
     axiosMock.mockImplementation(() => {
       return {
         status: 202
@@ -298,7 +298,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('Handles Anithesis Non-2XX error code', async () => {
+  it('Handles Antithesis Non-2XX error code', async () => {
     axiosMock.mockImplementation(() => {
       return {
         status: 404

@@ -34569,6 +34569,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parse_additional_parameters = parse_additional_parameters;
+exports.get_commit_info = get_commit_info;
+exports.get_pr_info = get_pr_info;
 exports.run = run;
 const github_1 = __nccwpck_require__(3228);
 const core = __importStar(__nccwpck_require__(7484));
@@ -34599,10 +34601,6 @@ function parse_additional_parameters(params_string) {
 }
 const THIS_ACTION = 'antithesis-trigger-action';
 function get_commit_info() {
-    if (github_1.context === undefined) {
-        core.info("Can't get commit info: no context received?!");
-        return {};
-    }
     const commit_link = `${github_1.context.serverUrl}/${github_1.context.repo.owner}/${github_1.context.repo.repo}/commit/${github_1.context.sha}`;
     return {
         'vcs.version_id': github_1.context.sha,

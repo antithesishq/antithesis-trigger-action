@@ -45,11 +45,7 @@ type CommitInfo = {
   'vcs.version_link': string
 }
 
-function get_commit_info(): CommitInfo | Record<string, never> {
-  if (context === undefined) {
-    core.info("Can't get commit info: no context received?!")
-    return {}
-  }
+export function get_commit_info(): CommitInfo | Record<string, never> {
   const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`
   return {
     'vcs.version_id': context.sha,
@@ -64,7 +60,7 @@ type PRInfo = {
   'vcs.pr_owner': string
 }
 
-function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
+export function get_pr_info(): (PRInfo & CommitInfo) | Record<string, never> {
   const pr = context?.payload.pull_request as PullRequest | undefined
   if (pr === undefined) {
     core.info('The event that invoked this Action has no `pull_request`.')
