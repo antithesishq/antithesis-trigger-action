@@ -159,9 +159,9 @@ export async function run(): Promise<void> {
         ...get_pr_info(),
 
         // these are deprecated:
-        //'antithesis.integrations.type': 'github',
-        //'antithesis.integrations.callback_url': callback_url,
-        //'antithesis.integrations.token': github_token,
+        'antithesis.integrations.type': 'github',
+        'antithesis.integrations.callback_url': callback_url,
+        'antithesis.integrations.token': github_token,
 
         // these aren't:
         'antithesis.integrations.github.callback_url': callback_url,
