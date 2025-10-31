@@ -37,6 +37,53 @@ export function parse_additional_parameters(
   return result
 }
 
+const THIS_ACTION = 'antithesis-trigger-action'
+
+type CommitInfo = {
+  'vcs.version_id': string
+  'vcs.version_link': string
+}
+
+export function get_commit_info(): CommitInfo | Record<string, never> {
+  const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`
+  return {
+    'vcs.version_id': context.sha,
+    'vcs.version_link': commit_link
+  }
+}
+
+type PRInfo = {
+  'vcs.pr_link': string
+  'vcs.pr_id': number
+  'vcs.pr_title': string
+  'vcs.pr_owner': string
+}
+
+export function get_pr_info(): Partial<PRInfo & CommitInfo> {
+  const pr = context?.payload.pull_request
+  if (pr === undefined) {
+    core.info('The event that invoked this Action has no `pull_request`.')
+    return {}
+  }
+
+  // Possibly override `get_commit_info()`: we only care about the feature commit.
+  const commit_info_override =
+    pr.head?.sha !== undefined && pr.head?.repo.html_url !== undefined
+      ? {
+          'vcs.version_id': pr.head?.sha,
+          'vcs.version_link': `${pr.head?.repo.html_url}/commit/${pr.head?.sha}`
+        }
+      : {}
+
+  return {
+    ...commit_info_override,
+    'vcs.pr_link': pr.html_url,
+    'vcs.pr_id': pr.number,
+    'vcs.pr_title': pr.title,
+    'vcs.pr_owner': pr.user?.login
+  }
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -62,7 +109,7 @@ export async function run(): Promise<void> {
 
     core.info(`Callback Url: ${callback_url}`)
 
-    // Read images informaiton
+    // Read images information
     const images = core.getInput('images')
     const config_image = core.getInput('config_image')
 
@@ -79,6 +126,7 @@ export async function run(): Promise<void> {
     const github_token = core.getInput('github_token')
 
     // Extract the branch
+    // (nb: the ref may be a branch *or a tag!*)
     const branch = context.ref?.replace('refs/heads/', '') ?? ''
 
     core.info(`Source: ${branch}`)
@@ -96,9 +144,29 @@ export async function run(): Promise<void> {
 
     const body = {
       params: {
+        'run.creator_name': context?.actor,
+        'run.team': core.getInput('team'),
+        'run.cron_schedule': core.getInput('cron_schedule'),
+        'run.caller_name': THIS_ACTION,
+        'run.caller_type': 'github_action',
+        'vcs.system_name': core.getInput('system_name'),
+        'vcs.repo_type': 'github',
+        'vcs.repo_owner': context?.payload.repository?.owner.login,
+        'vcs.repo_name': context?.payload.repository?.name,
+        'vcs.repo_branch': branch,
+
+        ...get_commit_info(),
+        ...get_pr_info(),
+
+        // these are deprecated:
         'antithesis.integrations.type': 'github',
         'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
+
+        // these aren't:
+        'antithesis.integrations.github.callback_url': callback_url,
+        'antithesis.integrations.github.token': github_token,
+
         'antithesis.images': images,
         'antithesis.config_image': config_image,
         'antithesis.source': branch,
@@ -109,7 +177,7 @@ export async function run(): Promise<void> {
       }
     }
 
-    // Call into Anithesis
+    // Call into Antithesis
     const username = core.getInput('username')
     const password = core.getInput('password')
 
@@ -128,7 +196,7 @@ export async function run(): Promise<void> {
     }
 
     // Update GitHub commit status with pending status
-    // Only if we have a call back URL & a token , because we want to make sure
+    // Only if we have a callback URL & a token, because we want to make sure
     // that Antithesis could update the status to done
     if (callback_url !== undefined && github_token !== undefined) {
       let owner = context?.payload?.repository?.owner?.name
