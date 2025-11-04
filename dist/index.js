@@ -34526,6 +34526,86 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 1302:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getinput_or_undefined = getinput_or_undefined;
+exports.shallow_prune_undefined_values = shallow_prune_undefined_values;
+exports.parse_additional_parameters = parse_additional_parameters;
+const core = __importStar(__nccwpck_require__(7484));
+function getinput_or_undefined(input_name) {
+    const input_val = core.getInput(input_name);
+    return input_val === '' ? undefined : input_val;
+}
+function shallow_prune_undefined_values(obj) {
+    const keys = Object.keys(obj);
+    const keys_with_defined_value = keys.filter(k => obj[k] !== undefined);
+    return Object.fromEntries(keys_with_defined_value.map(k => [k, obj[k]]));
+}
+function parse_parts(line) {
+    if (!line)
+        return undefined;
+    const parts = line?.trim().split('=');
+    if (parts && parts.length < 2) {
+        core.warning(`These parameters could not be parsed and will not be sent to the webhook: ${line}`);
+        return undefined;
+    }
+    const [name, ...rest] = parts;
+    const value = rest.join('=');
+    return { name: name.trim(), value: value.trim() };
+}
+function parse_additional_parameters(params_string) {
+    const result = {};
+    if (params_string) {
+        for (const line of params_string.split(/\r|\n/)) {
+            const parts = parse_parts(line);
+            if (parts != null) {
+                result[parts.name] = parts.value;
+            }
+        }
+    }
+    return result;
+}
+
+
+/***/ }),
+
 /***/ 1730:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -34568,38 +34648,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parse_additional_parameters = parse_additional_parameters;
 exports.get_commit_info = get_commit_info;
 exports.get_pr_info = get_pr_info;
 exports.run = run;
 const github_1 = __nccwpck_require__(3228);
 const core = __importStar(__nccwpck_require__(7484));
 const axios_1 = __importDefault(__nccwpck_require__(7269));
-function parse_parts(line) {
-    if (!line)
-        return undefined;
-    const parts = line?.trim().split('=');
-    if (parts && parts.length < 2) {
-        core.warning(`These parameters could not be parsed and will not be sent to the webhook: ${line}`);
-        return undefined;
-    }
-    const [name, ...rest] = parts;
-    const value = rest.join('=');
-    return { name: name.trim(), value: value.trim() };
-}
-function parse_additional_parameters(params_string) {
-    const result = {};
-    if (params_string) {
-        for (const line of params_string.split(/\r|\n/)) {
-            const parts = parse_parts(line);
-            if (parts != null) {
-                result[parts.name] = parts.value;
-            }
-        }
-    }
-    return result;
-}
+const helpers_1 = __nccwpck_require__(1302);
+/** The name of this GitHub Action. Used as `params["run.caller_name"]`. */
 const THIS_ACTION = 'antithesis-trigger-action';
+/* Literals which must match Antithesis-internal literals. */
+const GITHUB_ACTION = 'github_action'; // identical to our KNOWN_RUN_CREATOR_TYPE.GITHUB_ACTION
+const INTEGRATIONS_TYPE_GITHUB = 'github'; // identical to PARAM_INTEGRATIONS_TYPE_GITHUB
 function get_commit_info() {
     const commit_link = `${github_1.context.serverUrl}/${github_1.context.repo.owner}/${github_1.context.repo.repo}/commit/${github_1.context.sha}`;
     return {
@@ -34616,16 +34676,16 @@ function get_pr_info() {
     // Possibly override `get_commit_info()`: we only care about the feature commit.
     const commit_info_override = pr.head?.sha !== undefined && pr.head?.repo.html_url !== undefined
         ? {
-            'vcs.version_id': pr.head?.sha,
-            'vcs.version_link': `${pr.head?.repo.html_url}/commit/${pr.head?.sha}`
+            'vcs.version_id': pr.head.sha,
+            'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`
         }
         : {};
     return {
         ...commit_info_override,
-        'vcs.pr_link': pr.html_url,
         'vcs.pr_id': pr.number,
-        'vcs.pr_title': pr.title,
-        'vcs.pr_owner': pr.user?.login
+        'vcs.pr_link': pr.html_url,
+        'vcs.pr_owner': pr.user?.login,
+        'vcs.pr_title': pr.title
     };
 }
 /**
@@ -34662,25 +34722,31 @@ async function run() {
         core.info(`Source: ${branch}`);
         // Extract email list
         const emails = core.getInput('email_recipients');
-        const additional_parameters = parse_additional_parameters(core.getInput('additional_parameters'));
+        const additional_parameters = (0, helpers_1.parse_additional_parameters)(core.getInput('additional_parameters'));
         core.info(`Additional Parameters: ${JSON.stringify(additional_parameters)}`);
         const test_name = core.getInput('test_name');
+        const run_params = (0, helpers_1.shallow_prune_undefined_values)({
+            'run.creator_name': github_1.context.actor,
+            'run.team': (0, helpers_1.getinput_or_undefined)('team'),
+            'run.cron_schedule': (0, helpers_1.getinput_or_undefined)('cron_schedule'),
+            'run.caller_name': THIS_ACTION,
+            'run.caller_type': GITHUB_ACTION
+        });
+        const vcs_params = (0, helpers_1.shallow_prune_undefined_values)({
+            'vcs.system_name': (0, helpers_1.getinput_or_undefined)('system_name'),
+            'vcs.repo_type': INTEGRATIONS_TYPE_GITHUB,
+            'vcs.repo_owner': github_1.context?.payload.repository?.owner.login,
+            'vcs.repo_name': github_1.context?.payload.repository?.name,
+            'vcs.repo_branch': branch,
+            ...get_commit_info(),
+            ...get_pr_info()
+        });
         const body = {
             params: {
-                'run.creator_name': github_1.context?.actor,
-                'run.team': core.getInput('team'),
-                'run.cron_schedule': core.getInput('cron_schedule'),
-                'run.caller_name': THIS_ACTION,
-                'run.caller_type': 'github_action',
-                'vcs.system_name': core.getInput('system_name'),
-                'vcs.repo_type': 'github',
-                'vcs.repo_owner': github_1.context?.payload.repository?.owner.login,
-                'vcs.repo_name': github_1.context?.payload.repository?.name,
-                'vcs.repo_branch': branch,
-                ...get_commit_info(),
-                ...get_pr_info(),
+                ...run_params,
+                ...vcs_params,
                 // these are deprecated:
-                'antithesis.integrations.type': 'github',
+                'antithesis.integrations.type': INTEGRATIONS_TYPE_GITHUB,
                 'antithesis.integrations.callback_url': callback_url,
                 'antithesis.integrations.token': github_token,
                 // these aren't:

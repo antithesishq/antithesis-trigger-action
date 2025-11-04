@@ -1,50 +1,32 @@
 import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
+import {
+  getinput_or_undefined,
+  shallow_prune_undefined_values,
+  parse_additional_parameters
+} from './helpers'
 
-function parse_parts(
-  line: string
-): { name: string; value: string } | undefined {
-  if (!line) return undefined
-
-  const parts = line?.trim().split('=')
-
-  if (parts && parts.length < 2) {
-    core.warning(
-      `These parameters could not be parsed and will not be sent to the webhook: ${line}`
-    )
-    return undefined
-  }
-
-  const [name, ...rest] = parts
-  const value = rest.join('=')
-  return { name: name.trim(), value: value.trim() }
-}
-
-export function parse_additional_parameters(
-  params_string: string
-): Record<string, string> {
-  const result: Record<string, string> = {}
-
-  if (params_string) {
-    for (const line of params_string.split(/\r|\n/)) {
-      const parts = parse_parts(line)
-      if (parts != null) {
-        result[parts.name] = parts.value
-      }
-    }
-  }
-  return result
-}
-
+/** The name of this GitHub Action. Used as `params["run.caller_name"]`. */
 const THIS_ACTION = 'antithesis-trigger-action'
+
+/* Literals which must match Antithesis-internal literals. */
+const GITHUB_ACTION = 'github_action' // identical to our KNOWN_RUN_CREATOR_TYPE.GITHUB_ACTION
+const INTEGRATIONS_TYPE_GITHUB = 'github' // identical to PARAM_INTEGRATIONS_TYPE_GITHUB
 
 type CommitInfo = {
   'vcs.version_id': string
   'vcs.version_link': string
 }
 
-export function get_commit_info(): CommitInfo | Record<string, never> {
+type PRInfo = {
+  'vcs.pr_id': number
+  'vcs.pr_link': string | undefined
+  'vcs.pr_owner': string | undefined
+  'vcs.pr_title': string | undefined
+}
+
+export function get_commit_info(): CommitInfo {
   const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`
   return {
     'vcs.version_id': context.sha,
@@ -52,14 +34,9 @@ export function get_commit_info(): CommitInfo | Record<string, never> {
   }
 }
 
-type PRInfo = {
-  'vcs.pr_link': string
-  'vcs.pr_id': number
-  'vcs.pr_title': string
-  'vcs.pr_owner': string
-}
-
-export function get_pr_info(): Partial<PRInfo & CommitInfo> {
+export function get_pr_info():
+  | (PRInfo & Partial<CommitInfo>)
+  | Record<PropertyKey, never> {
   const pr = context?.payload.pull_request
   if (pr === undefined) {
     core.info('The event that invoked this Action has no `pull_request`.')
@@ -70,17 +47,17 @@ export function get_pr_info(): Partial<PRInfo & CommitInfo> {
   const commit_info_override =
     pr.head?.sha !== undefined && pr.head?.repo.html_url !== undefined
       ? {
-          'vcs.version_id': pr.head?.sha,
-          'vcs.version_link': `${pr.head?.repo.html_url}/commit/${pr.head?.sha}`
+          'vcs.version_id': pr.head.sha as string,
+          'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`
         }
       : {}
 
   return {
     ...commit_info_override,
-    'vcs.pr_link': pr.html_url,
     'vcs.pr_id': pr.number,
-    'vcs.pr_title': pr.title,
-    'vcs.pr_owner': pr.user?.login
+    'vcs.pr_link': pr.html_url,
+    'vcs.pr_owner': pr.user?.login,
+    'vcs.pr_title': pr.title
   }
 }
 
@@ -142,24 +119,31 @@ export async function run(): Promise<void> {
 
     const test_name = core.getInput('test_name')
 
+    const run_params = shallow_prune_undefined_values({
+      'run.creator_name': context.actor,
+      'run.team': getinput_or_undefined('team'),
+      'run.cron_schedule': getinput_or_undefined('cron_schedule'),
+      'run.caller_name': THIS_ACTION,
+      'run.caller_type': GITHUB_ACTION
+    })
+
+    const vcs_params = shallow_prune_undefined_values({
+      'vcs.system_name': getinput_or_undefined('system_name'),
+      'vcs.repo_type': INTEGRATIONS_TYPE_GITHUB,
+      'vcs.repo_owner': context?.payload.repository?.owner.login,
+      'vcs.repo_name': context?.payload.repository?.name,
+      'vcs.repo_branch': branch,
+      ...get_commit_info(),
+      ...get_pr_info()
+    })
+
     const body = {
       params: {
-        'run.creator_name': context?.actor,
-        'run.team': core.getInput('team'),
-        'run.cron_schedule': core.getInput('cron_schedule'),
-        'run.caller_name': THIS_ACTION,
-        'run.caller_type': 'github_action',
-        'vcs.system_name': core.getInput('system_name'),
-        'vcs.repo_type': 'github',
-        'vcs.repo_owner': context?.payload.repository?.owner.login,
-        'vcs.repo_name': context?.payload.repository?.name,
-        'vcs.repo_branch': branch,
-
-        ...get_commit_info(),
-        ...get_pr_info(),
+        ...run_params,
+        ...vcs_params,
 
         // these are deprecated:
-        'antithesis.integrations.type': 'github',
+        'antithesis.integrations.type': INTEGRATIONS_TYPE_GITHUB,
         'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
 
