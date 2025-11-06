@@ -34728,7 +34728,7 @@ async function run() {
         const run_params = (0, helpers_1.shallow_prune_undefined_values)({
             'run.creator_name': github_1.context.actor,
             'run.team': (0, helpers_1.getinput_or_undefined)('team'),
-            'run.cron_schedule': (0, helpers_1.getinput_or_undefined)('cron_schedule'),
+            'run.cron_schedule': github_1.context.payload.schedule,
             'run.caller_name': THIS_ACTION,
             'run.caller_type': GITHUB_ACTION
         });
