@@ -1,40 +1,64 @@
 import { context, getOctokit } from '@actions/github'
 import * as core from '@actions/core'
 import axios from 'axios'
+import {
+  getinput_or_undefined,
+  shallow_prune_undefined_values,
+  parse_additional_parameters
+} from './helpers'
 
-function parse_parts(
-  line: string
-): { name: string; value: string } | undefined {
-  if (!line) return undefined
+/** The name of this GitHub Action. Used as `params["run.caller_name"]`. */
+const THIS_ACTION = 'antithesis-trigger-action'
 
-  const parts = line?.trim().split('=')
+/* Literals which must match Antithesis-internal literals. */
+const GITHUB_ACTION = 'github_action' // identical to our KNOWN_RUN_CREATOR_TYPE.GITHUB_ACTION
+const INTEGRATIONS_TYPE_GITHUB = 'github' // identical to PARAM_INTEGRATIONS_TYPE_GITHUB
 
-  if (parts && parts.length < 2) {
-    core.warning(
-      `These parameters could not be parsed and will not be sent to the webhook: ${line}`
-    )
-    return undefined
-  }
-
-  const [name, ...rest] = parts
-  const value = rest.join('=')
-  return { name: name.trim(), value: value.trim() }
+type CommitInfo = {
+  'vcs.version_id': string
+  'vcs.version_link': string
 }
 
-export function parse_additional_parameters(
-  params_string: string
-): Record<string, string> {
-  const result: Record<string, string> = {}
+type PRInfo = {
+  'vcs.pr_id': number
+  'vcs.pr_link': string | undefined
+  'vcs.pr_owner': string | undefined
+  'vcs.pr_title': string | undefined
+}
 
-  if (params_string) {
-    for (const line of params_string.split(/\r|\n/)) {
-      const parts = parse_parts(line)
-      if (parts != null) {
-        result[parts.name] = parts.value
-      }
-    }
+export function get_commit_info(): CommitInfo {
+  const commit_link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`
+  return {
+    'vcs.version_id': context.sha,
+    'vcs.version_link': commit_link
   }
-  return result
+}
+
+export function get_pr_info():
+  | (PRInfo & Partial<CommitInfo>)
+  | Record<PropertyKey, never> {
+  const pr = context?.payload.pull_request
+  if (pr === undefined) {
+    core.info('The event that invoked this Action has no `pull_request`.')
+    return {}
+  }
+
+  // Possibly override `get_commit_info()`: we only care about the feature commit.
+  const commit_info_override =
+    pr.head?.sha !== undefined && pr.head?.repo.html_url !== undefined
+      ? {
+          'vcs.version_id': pr.head.sha as string,
+          'vcs.version_link': `${pr.head.repo.html_url}/commit/${pr.head.sha}`
+        }
+      : {}
+
+  return {
+    ...commit_info_override,
+    'vcs.pr_id': pr.number,
+    'vcs.pr_link': pr.html_url,
+    'vcs.pr_owner': pr.user?.login,
+    'vcs.pr_title': pr.title
+  }
 }
 
 /**
@@ -62,7 +86,7 @@ export async function run(): Promise<void> {
 
     core.info(`Callback Url: ${callback_url}`)
 
-    // Read images informaiton
+    // Read images information
     const images = core.getInput('images')
     const config_image = core.getInput('config_image')
 
@@ -79,6 +103,7 @@ export async function run(): Promise<void> {
     const github_token = core.getInput('github_token')
 
     // Extract the branch
+    // (nb: the ref may be a branch *or a tag!*)
     const branch = context.ref?.replace('refs/heads/', '') ?? ''
 
     core.info(`Source: ${branch}`)
@@ -94,11 +119,38 @@ export async function run(): Promise<void> {
 
     const test_name = core.getInput('test_name')
 
+    const run_params = shallow_prune_undefined_values({
+      'run.creator_name': context.actor,
+      'run.team': getinput_or_undefined('team'),
+      'run.cron_schedule': context.payload.schedule as string | undefined,
+      'run.caller_name': THIS_ACTION,
+      'run.caller_type': GITHUB_ACTION
+    })
+
+    const vcs_params = shallow_prune_undefined_values({
+      'vcs.system_name': getinput_or_undefined('system_name'),
+      'vcs.repo_type': INTEGRATIONS_TYPE_GITHUB,
+      'vcs.repo_owner': context?.payload.repository?.owner.login,
+      'vcs.repo_name': context?.payload.repository?.name,
+      'vcs.repo_branch': branch,
+      ...get_commit_info(),
+      ...get_pr_info()
+    })
+
     const body = {
       params: {
-        'antithesis.integrations.type': 'github',
+        ...run_params,
+        ...vcs_params,
+
+        // these are deprecated:
+        'antithesis.integrations.type': INTEGRATIONS_TYPE_GITHUB,
         'antithesis.integrations.callback_url': callback_url,
         'antithesis.integrations.token': github_token,
+
+        // these aren't:
+        'antithesis.integrations.github.callback_url': callback_url,
+        'antithesis.integrations.github.token': github_token,
+
         'antithesis.images': images,
         'antithesis.config_image': config_image,
         'antithesis.source': branch,
@@ -109,7 +161,7 @@ export async function run(): Promise<void> {
       }
     }
 
-    // Call into Anithesis
+    // Call into Antithesis
     const username = core.getInput('username')
     const password = core.getInput('password')
 
@@ -128,7 +180,7 @@ export async function run(): Promise<void> {
     }
 
     // Update GitHub commit status with pending status
-    // Only if we have a call back URL & a token , because we want to make sure
+    // Only if we have a callback URL & a token, because we want to make sure
     // that Antithesis could update the status to done
     if (callback_url !== undefined && github_token !== undefined) {
       let owner = context?.payload?.repository?.owner?.name

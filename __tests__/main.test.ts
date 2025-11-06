@@ -23,68 +23,32 @@ let setFailedMock: jest.SpyInstance
 let axiosMock: jest.SpyInstance
 let createCommitStatusMock: jest.SpyInstance
 
-describe('successful_params_parsing', () => {
-  it('empty params', async () => {
-    const params = main.parse_additional_parameters(``)
-
-    expect(params).toEqual({})
+describe('reasonable_pr_info', () => {
+  it('undefined context.payload.pull_request returns {}', async () => {
+    github.context.payload.pull_request = undefined
+    expect(main.get_pr_info()).toEqual({})
   })
 
-  it('one line params', async () => {
-    const params = main.parse_additional_parameters(`p=v`)
-
-    expect(params).toEqual({ p: 'v' })
+  it("mostly-empty payload.pull_request doesn't override commit info", async () => {
+    github.context.payload.pull_request = { number: 1 }
+    const pr_info = main.get_pr_info()
+    expect(pr_info).not.toHaveProperty(['vcs.version_id'])
+    expect(pr_info).not.toHaveProperty(['vcs.version_link'])
   })
 
-  it('two line params', async () => {
-    const params = main.parse_additional_parameters(`
-    
-    p1=v1
-
-
-    p2=v2
-    
-    `)
-
-    expect(params).toEqual({ p1: 'v1', p2: 'v2' })
-  })
-
-  it('five line params', async () => {
-    const params = main.parse_additional_parameters(`p=v
-    p1 =    v1 
-    p2 = v2 
-    p3 = v3   
-    p4 = v4    
-    `)
-
-    expect(params).toEqual({ p: 'v', p1: 'v1', p2: 'v2', p3: 'v3', p4: 'v4' })
-  })
-
-  it('leading empty space in params', async () => {
-    const params = main.parse_additional_parameters(`
-    
-    
-    p   =   v`)
-
-    expect(params).toEqual({ p: 'v' })
-  })
-
-  it('trailing empty space in params', async () => {
-    const params = main.parse_additional_parameters(`p=v
-    
-    
-    
-    `)
-
-    expect(params).toEqual({ p: 'v' })
-  })
-
-  it('two line params with equal', async () => {
-    const params = main.parse_additional_parameters(`
-    p1='inner_value_1=1'
-    p2='v2'`)
-
-    expect(params).toEqual({ p1: "'inner_value_1=1'", p2: "'v2'" })
+  it('payload.pull_request overrides commit info if possible', async () => {
+    github.context.payload.pull_request = {
+      head: {
+        sha: 'deadbeef',
+        repo: {
+          html_url: 'https://github.com'
+        }
+      },
+      number: 1
+    }
+    const pr_info = main.get_pr_info()
+    expect(pr_info).toHaveProperty(['vcs.version_id'])
+    expect(pr_info).toHaveProperty(['vcs.version_link'])
   })
 })
 
@@ -153,7 +117,7 @@ parameter2=value2
       .mockImplementation()
   })
 
-  it('calls Anithesis', async () => {
+  it('calls Antithesis', async () => {
     axiosMock.mockImplementation(() => {
       return {
         status: 202
@@ -187,7 +151,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('calls Anithesis even when no callback url', async () => {
+  it('calls Antithesis even when no callback url', async () => {
     github.context.payload = {
       repository: {
         name: 'repo_name',
@@ -223,7 +187,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('calls Anithesis even when no ref specified', async () => {
+  it('calls Antithesis even when no ref specified', async () => {
     github.context.payload = {
       repository: {
         name: 'repo_name',
@@ -261,7 +225,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('calls Anithesis when repo owner name is not specified', async () => {
+  it('calls Antithesis when repo owner name is not specified', async () => {
     axiosMock.mockImplementation(() => {
       return {
         status: 202
@@ -298,7 +262,7 @@ parameter2=value2
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
   })
 
-  it('Handles Anithesis Non-2XX error code', async () => {
+  it('Handles Antithesis Non-2XX error code', async () => {
     axiosMock.mockImplementation(() => {
       return {
         status: 404
