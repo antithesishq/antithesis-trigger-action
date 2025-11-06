@@ -45,15 +45,15 @@ inputs:
     description: 'A string description of your test run.'
     required: false
     default: ''
-  team: 
+  team:
     description:
-      "A string naming the team/group to which the person that invoked this run
-      belongs."
+      'A string naming the team/group to which the person that invoked this run
+      belongs.'
     required: false
     default: ''
   system_name:
-    description: 
-      "A string encoding a readable, version-irrespective name for the system 
+    description:
+      "A string encoding a readable, version-irrespective name for the system
       you're testing."
     required: false
     default: ''
