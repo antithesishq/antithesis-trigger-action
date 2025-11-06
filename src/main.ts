@@ -122,7 +122,7 @@ export async function run(): Promise<void> {
     const run_params = shallow_prune_undefined_values({
       'run.creator_name': context.actor,
       'run.team': getinput_or_undefined('team'),
-      'run.cron_schedule': getinput_or_undefined('cron_schedule'),
+      'run.cron_schedule': context.payload.schedule as string | undefined,
       'run.caller_name': THIS_ACTION,
       'run.caller_type': GITHUB_ACTION
     })

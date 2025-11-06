@@ -63,13 +63,6 @@ inputs:
       running multiple tests from the same commit.'
     required: false
     default: ''
-  cron_schedule:
-    description:
-      'For recurring tests, a CRON expression encoding when the test is scheduled.
-      Note that this field is specifiable metadata, not a source of truth about
-      when runs will actually occur!'
-    required: false
-    default: ''
   email_recipients:
     description:
       'A semicolon-delimited list of the email addresses for the recipients who
