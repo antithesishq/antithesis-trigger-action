@@ -50,50 +50,67 @@ example usage here in our demo project
 
 ```yml
 - name: Run Antithesis Tests
-  uses: antithesishq/antithesis-trigger-action@v0.5
+  uses: antithesishq/antithesis-trigger-action@v0.X
   with:
-    notebook_name: my-test-notebook-name
+    # Inputs which let your workflow call Antithesis:
     tenant: my-tenant-name
     username: ${{ secrets.ANTITHESIS_USERNAME }}
     password: ${{ secrets.ANTITHESIS_PASSWORD }}
-    github_token: ${{ secrets.GH_PAT }}
+    notebook_name: my-test-notebook-name
+
+    # Inputs which tell Antithesis what to test:
     config_image: myconfigcontainer@digest
     images: mycontainer1@digest;mycontainer2:tag
-    description: my-desc
+
+    # Inputs which tell Antithesis how to report back:
+    github_token: ${{ secrets.GH_PAT }}
     email_recipients: email1@provider.com;email2@provider.com
+
+    # Inputs which specify metadata about what you're running:
+    description: my-desc
     test_name: the-test-name
+
+    # Other parameters go here:
     additional_parameters: |-
-      parameter1_name=parameter1_value
-      parameter2_name=parameter2_value
+      custom.param_name = "Contact us to set up extra parameters."
 ```
 
 ### Inputs
-
-- **notebook_name** : the name of your test that will be run (provided by
-  Antithesis)
-- **tenant** : your tenant's name (e.g. If your subdomain is
+- If any of these are incorrect, your run won't start:
+  - ``tenant``: your tenant's name (e.g. If your subdomain is
   $TENANT_NAME.antithesis.com, your tenant name is `$TENANT_NAME`)
-- **config_image** : The image version that Antithesis will pull from the
-  container registry for the config image. This should be a single image version
-  formatted in the same way as those in the antithesis.images parameter.
-- **images** : The image versions that Antithesis will use to build your test
-  environment. The images are specified as an optional registry, a container
-  name and either a digest (which is recommended) or a tag. A ‘;’ delimited
-  list. Each entry is in this format: `[REGISTRY/]NAME[:TAG|@DIGEST]`.
-- **description** : A string description of your test run. The description will
-  be in the headers of the generated report and of any emails triggered by the
-  test run.
-- **email_recipients** : A semi-colon delimited list of the email addresses for
-  the recipients who will be emailed links to the triage report produced by this
-  test run. If this parameter is not specified, emails will be sent to the
-  default users set up for the test.
-- **additional_parameters** : A newline-seperated list of additional parameters
-  to be sent to the test run.
-- **test_name**: An optional name for the test you are running. When specified,
-  the Git commit's status context will be
-  `continuous-testing/antithesis (test_name)`. Otherwise, the default context is
-  `continuous-testing/antithesis`. This enables users to run more than one
-  Antithesis test per commit.
+  - ``username`` and ``password``: your Antithesis credentials, as stored in your secrets
+  - ``notebook_name``: the name of your test that will be run (provided by
+  Antithesis)
+
+- If any of these are incorrect, Antithesis may not test what you want:
+  - ``config_image``: The image version that Antithesis will pull from the
+    container registry for the config image. This should be a single image version
+    formatted in the same way as those in the antithesis.images parameter.
+  - ``images``: The image versions that Antithesis will use to build your test
+    environment. The images are specified as an optional registry, a container
+    name and either a digest (which is recommended) or a tag. A ‘;’ delimited
+    list. Each entry is in this format: `[REGISTRY/]NAME[:TAG|@DIGEST]`.
+
+- If any of these are incorrect, you may not hear about results:
+  - ``email_recipients``: A semi-colon delimited list of the email addresses for
+    the recipients who will be emailed links to the triage report produced by this
+    test run. If this parameter is not specified, emails will be sent to the
+    default users set up for the test.
+
+- These parameters are used to show you information about your runs:
+  - ``description``: A string description of your test run. The description will
+    be in the headers of the generated report and of any emails triggered by the
+    test run.
+  - ``test_name``: An optional name for the test you are running. When specified,
+    the Git commit's status context will be
+    `continuous-testing/antithesis (test_name)`. Otherwise, the default context is
+    `continuous-testing/antithesis`. This enables users to run more than one
+    Antithesis test per commit.
+
+- ``additional_parameters``: If Customer Experience sets up notebook-specific 
+  parameters for you, specify them here as a newline-seperated list.
+
 
 ### FAQs
 
