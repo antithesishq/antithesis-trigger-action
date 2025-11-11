@@ -56,7 +56,7 @@ example usage here in our demo project
 
 ```yml
 - name: Run Antithesis Tests
-  uses: antithesishq/antithesis-trigger-action@v0.X
+  uses: antithesishq/antithesis-trigger-action@v0.X  # replace with a specific release
   with:
     # Inputs which let your workflow call Antithesis:
     tenant: my-tenant-name
@@ -72,9 +72,11 @@ example usage here in our demo project
     github_token: ${{ secrets.GH_PAT }}
     email_recipients: email1@provider.com;email2@provider.com
 
-    # Inputs which specify metadata about what you're running:
-    description: my-desc
-    test_name: my-test-name
+    # Inputs which specify metadata:
+    team: My team
+    system_name: My Distributed System
+    description: my description for this test
+    test_name: the name of this test
 
     # Other parameters go here:
     additional_parameters: |-
@@ -106,6 +108,8 @@ example usage here in our demo project
 >   default users set up for the test.
 > 
 > These are used to show you information about your runs:
+> - `team`: A readable name for the team that owns this run.
+> - `system_name`: A readable, version-irrespective name for the system under test.
 > - `description`: A string description of your test run. The description will
 >   be in the headers of the generated report and of any emails triggered by the
 >   test run.
