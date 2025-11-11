@@ -35,13 +35,16 @@ example usage here in our demo project
 > We recommend that you configure the token as follows:
 > - Set repository access to **Only select repositories** > Select repositories > (the repository you're testing)
 > - Only grant the following permissions:
-> | Permission | Access type |
-> | --- | --- |
-> | Metadata | Read-only |
-> | Commit statuses | Read and write |
-> | Contents | Read-only |
-> | Pull requests | Read-only |
+>
+>   | Permission | Access type |
+>   | --- | --- |
+>   | Metadata | Read-only |
+>   | Commit statuses | Read and write |
+>   | Contents | Read-only |
+>   | Pull requests | Read-only |
+>
 > For example:
+>
 > ![github_pat_token_permissions](https://github.com/antithesishq/antithesis-trigger-action/assets/3439582/935c5c58-e158-4558-a455-9a5f99d48c8b)
 
 3. Add your token to the repository secrets as you did in step 1, and give it
