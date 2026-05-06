@@ -182,7 +182,7 @@ export async function run(): Promise<void> {
     // Update GitHub commit status with pending status
     // Only if we have a callback URL & a token, because we want to make sure
     // that Antithesis could update the status to done
-    if (callback_url !== undefined && github_token !== undefined) {
+    if (callback_url && github_token) {
       let owner = context?.payload?.repository?.owner?.name
       if (owner === undefined) {
         owner = context?.payload?.repository?.owner?.login
