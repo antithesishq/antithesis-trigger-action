@@ -63245,17 +63245,22 @@ async function run() {
             ...get_commit_info(),
             ...get_pr_info()
         });
-        const body = {
-            params: {
-                ...run_params,
-                ...vcs_params,
+        const integrations_params = github_token
+            ? {
                 // these are deprecated:
                 'antithesis.integrations.type': INTEGRATIONS_TYPE_GITHUB,
                 'antithesis.integrations.callback_url': callback_url,
                 'antithesis.integrations.token': github_token,
                 // these aren't:
                 'antithesis.integrations.github.callback_url': callback_url,
-                'antithesis.integrations.github.token': github_token,
+                'antithesis.integrations.github.token': github_token
+            }
+            : {};
+        const body = {
+            params: {
+                ...run_params,
+                ...vcs_params,
+                ...integrations_params,
                 'antithesis.images': images,
                 'antithesis.config_image': config_image,
                 'antithesis.source': branch,
@@ -63283,7 +63288,7 @@ async function run() {
         // Update GitHub commit status with pending status
         // Only if we have a callback URL & a token, because we want to make sure
         // that Antithesis could update the status to done
-        if (callback_url !== undefined && github_token !== undefined) {
+        if (callback_url && github_token) {
             let owner = github_1.context?.payload?.repository?.owner?.name;
             if (owner === undefined) {
                 owner = github_1.context?.payload?.repository?.owner?.login;
