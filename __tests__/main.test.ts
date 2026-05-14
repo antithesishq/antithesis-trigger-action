@@ -287,7 +287,7 @@ parameter2=value2
     )
 
     expect(setFailedMock).toHaveBeenCalledWith(
-      'Failed to submit request, recieved a non-2XX response code : 404'
+      'Failed to submit request, received a non-2XX response code : 404'
     )
 
     expect(createCommitStatusMock).toHaveBeenCalledTimes(0)
