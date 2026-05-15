@@ -8,7 +8,7 @@ export function getinput_or_undefined(input_name: string): string | undefined {
 export function shallow_prune_undefined_values<O extends object>(
   obj: O
 ): Partial<O> {
-  const keys = Object.keys(obj) as (keyof O)[]
+  const keys = Object.keys(obj) as Array<keyof O>
   const keys_with_defined_value = keys.filter(k => obj[k] !== undefined)
   return Object.fromEntries(
     keys_with_defined_value.map(k => [k, obj[k]])
