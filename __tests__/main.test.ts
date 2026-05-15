@@ -21,7 +21,7 @@ let getInputMock: jest.SpyInstance
 let setOutputMock: jest.SpyInstance
 let setFailedMock: jest.SpyInstance
 let axiosMock: jest.SpyInstance
-let createCommitStatusMock: jest.SpyInstance
+let createCommitStatusMock: jest.Mock
 
 describe('reasonable_pr_info', () => {
   it('undefined context.payload.pull_request returns {}', async () => {
@@ -112,9 +112,10 @@ parameter2=value2
       }
     }
 
-    createCommitStatusMock = jest
-      .spyOn(github, 'getOctokit')
-      .mockImplementation()
+    createCommitStatusMock = jest.fn().mockResolvedValue({})
+    jest.spyOn(github, 'getOctokit').mockReturnValue({
+      rest: { repos: { createCommitStatus: createCommitStatusMock } }
+    } as unknown as ReturnType<typeof github.getOctokit>)
   })
 
   it('calls Antithesis', async () => {
@@ -263,10 +264,10 @@ parameter2=value2
   })
 
   it('Handles Antithesis Non-2XX error code', async () => {
+    // Axios throws on non-2XX responses by default; the action lets the
+    // exception propagate to the outer catch.
     axiosMock.mockImplementation(() => {
-      return {
-        status: 404
-      }
+      throw new Error('Request failed with status code 404')
     })
 
     await main.run()
@@ -287,10 +288,34 @@ parameter2=value2
     )
 
     expect(setFailedMock).toHaveBeenCalledWith(
-      'Failed to submit request, received a non-2XX response code : 404'
+      'Request failed with status code 404'
     )
 
     expect(createCommitStatusMock).toHaveBeenCalledTimes(0)
+  })
+
+  it('logs an error but still succeeds when posting commit status fails', async () => {
+    axiosMock.mockImplementation(() => {
+      return {
+        status: 202
+      }
+    })
+    createCommitStatusMock.mockRejectedValue(new Error('GitHub is down'))
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    expect(axiosMock).toHaveBeenCalled()
+    expect(createCommitStatusMock).toHaveBeenCalledTimes(1)
+
+    // The commit-status failure is non-fatal: it logs an error...
+    expect(errorMock).toHaveBeenCalledWith(
+      'Failed to post a pending status on GitHub due to Error: GitHub is down'
+    )
+
+    // ...but the action still reports success and does not fail.
+    expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
+    expect(setFailedMock).not.toHaveBeenCalled()
   })
 
   it('Handles unexpected exceptions', async () => {
@@ -317,7 +342,7 @@ parameter2=value2
 
     expect(errorMock).toHaveBeenNthCalledWith(
       1,
-      'Failed to submit request : Error: An unexpected exception.'
+      'Failed to submit request : An unexpected exception.'
     )
 
     expect(setFailedMock).toHaveBeenCalledWith('An unexpected exception.')

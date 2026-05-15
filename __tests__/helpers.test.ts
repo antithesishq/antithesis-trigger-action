@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import * as helpers from '../src/helpers'
 
 describe('successful_params_parsing', () => {
@@ -62,5 +63,19 @@ describe('successful_params_parsing', () => {
     p2='v2'`)
 
     expect(params).toEqual({ p1: "'inner_value_1=1'", p2: "'v2'" })
+  })
+
+  it('warns and skips lines without an = sign', async () => {
+    const warningMock = jest.spyOn(core, 'warning').mockImplementation()
+
+    const params = helpers.parse_additional_parameters(`p1=v1
+no_equals_here
+p2=v2`)
+
+    expect(params).toEqual({ p1: 'v1', p2: 'v2' })
+    expect(warningMock).toHaveBeenCalledTimes(1)
+    expect(warningMock).toHaveBeenCalledWith(
+      expect.stringContaining('no_equals_here')
+    )
   })
 })

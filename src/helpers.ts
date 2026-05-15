@@ -18,9 +18,10 @@ export function shallow_prune_undefined_values<O extends object>(
 function parse_parts(
   line: string
 ): { name: string; value: string } | undefined {
-  if (!line) return undefined
+  const trimmed = line?.trim()
+  if (!trimmed) return undefined
 
-  const parts = line?.trim().split('=')
+  const parts = trimmed.split('=')
 
   if (parts && parts.length < 2) {
     core.warning(
