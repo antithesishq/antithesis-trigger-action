@@ -40549,9 +40549,10 @@ function shallow_prune_undefined_values(obj) {
     return Object.fromEntries(keys_with_defined_value.map(k => [k, obj[k]]));
 }
 function parse_parts(line) {
-    if (!line)
+    const trimmed = line?.trim();
+    if (!trimmed)
         return undefined;
-    const parts = line?.trim().split('=');
+    const parts = trimmed.split('=');
     if (parts && parts.length < 2) {
         core.warning(`These parameters could not be parsed and will not be sent to the webhook: ${line}`);
         return undefined;
@@ -40664,6 +40665,17 @@ function get_pr_info() {
  */
 async function run() {
     try {
+        // Read credentials first and register them as secrets so any accidental
+        // appearance in logs (e.g. axios error messages) is masked by the runner.
+        const username = core.getInput('username');
+        const password = core.getInput('password');
+        const github_token = core.getInput('github_token');
+        if (username)
+            core.setSecret(username);
+        if (password)
+            core.setSecret(password);
+        if (github_token)
+            core.setSecret(github_token);
         // Build the request URL
         const tenant = core.getInput('tenant');
         const notebook_name = core.getInput('notebook_name');
@@ -40684,8 +40696,6 @@ async function run() {
         // Read description information
         const description = core.getInput('description');
         core.info(`Desc: ${description}`);
-        // Build the request body
-        const github_token = core.getInput('github_token');
         // Extract the branch
         // (nb: the ref may be a branch *or a tag!*)
         const branch = github_1.context.ref?.replace('refs/heads/', '') ?? '';
@@ -40736,21 +40746,14 @@ async function run() {
                 ...additional_parameters
             }
         };
-        // Call into Antithesis
-        const username = core.getInput('username');
-        const password = core.getInput('password');
+        // Call into Antithesis. Axios throws on non-2XX by default, so any HTTP
+        // error falls through to the outer catch.
         const result = await axios_1.default.post(url, body, {
             auth: {
                 username,
                 password
             }
         });
-        if (result.status < 200 || result.status >= 300) {
-            const msg = `Failed to submit request, received a non-2XX response code : ${result.status}`;
-            core.error(msg);
-            core.setFailed(msg);
-            return;
-        }
         // Update GitHub commit status with pending status
         // Only if we have a callback URL & a token, because we want to make sure
         // that Antithesis could update the status to done
@@ -40762,11 +40765,11 @@ async function run() {
             const repo = github_1.context?.payload?.repository?.name;
             try {
                 const octokit = (0, github_1.getOctokit)(github_token);
-                const status_context = test_name !== undefined && test_name.length > 0
+                const status_context = test_name
                     ? `continuous-testing/antithesis (${test_name})`
                     : 'continuous-testing/antithesis';
                 if (owner && repo && sha) {
-                    octokit.rest.repos.createCommitStatus({
+                    await octokit.rest.repos.createCommitStatus({
                         owner,
                         repo,
                         sha,
@@ -40782,13 +40785,15 @@ async function run() {
             }
         }
         // Set status to success
-        core.info(`Successfully sent the request ${result}`);
+        core.info(`Successfully sent the request, status: ${result.status}`);
         core.setOutput('result', 'Success');
     }
     catch (error) {
-        core.error(`Failed to submit request : ${error}`);
-        if (error instanceof Error)
-            core.setFailed(error.message);
+        // Log only the message, not the full error — AxiosError stringification
+        // includes the request config (auth credentials).
+        const message = error instanceof Error ? error.message : String(error);
+        core.error(`Failed to submit request : ${message}`);
+        core.setFailed(message);
     }
 }
 

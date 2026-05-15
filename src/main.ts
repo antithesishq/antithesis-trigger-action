@@ -67,6 +67,15 @@ export function get_pr_info():
  */
 export async function run(): Promise<void> {
   try {
+    // Read credentials first and register them as secrets so any accidental
+    // appearance in logs (e.g. axios error messages) is masked by the runner.
+    const username = core.getInput('username')
+    const password = core.getInput('password')
+    const github_token = core.getInput('github_token')
+    if (username) core.setSecret(username)
+    if (password) core.setSecret(password)
+    if (github_token) core.setSecret(github_token)
+
     // Build the request URL
     const tenant: string = core.getInput('tenant')
     const notebook_name: string = core.getInput('notebook_name')
@@ -98,9 +107,6 @@ export async function run(): Promise<void> {
     const description = core.getInput('description')
 
     core.info(`Desc: ${description}`)
-
-    // Build the request body
-    const github_token = core.getInput('github_token')
 
     // Extract the branch
     // (nb: the ref may be a branch *or a tag!*)
@@ -167,23 +173,14 @@ export async function run(): Promise<void> {
       }
     }
 
-    // Call into Antithesis
-    const username = core.getInput('username')
-    const password = core.getInput('password')
-
+    // Call into Antithesis. Axios throws on non-2XX by default, so any HTTP
+    // error falls through to the outer catch.
     const result = await axios.post(url, body, {
       auth: {
         username,
         password
       }
     })
-
-    if (result.status < 200 || result.status >= 300) {
-      const msg = `Failed to submit request, received a non-2XX response code : ${result.status}`
-      core.error(msg)
-      core.setFailed(msg)
-      return
-    }
 
     // Update GitHub commit status with pending status
     // Only if we have a callback URL & a token, because we want to make sure
@@ -199,13 +196,12 @@ export async function run(): Promise<void> {
       try {
         const octokit = getOctokit(github_token)
 
-        const status_context =
-          test_name !== undefined && test_name.length > 0
-            ? `continuous-testing/antithesis (${test_name})`
-            : 'continuous-testing/antithesis'
+        const status_context = test_name
+          ? `continuous-testing/antithesis (${test_name})`
+          : 'continuous-testing/antithesis'
 
         if (owner && repo && sha) {
-          octokit.rest.repos.createCommitStatus({
+          await octokit.rest.repos.createCommitStatus({
             owner,
             repo,
             sha,
@@ -221,10 +217,13 @@ export async function run(): Promise<void> {
       }
     }
     // Set status to success
-    core.info(`Successfully sent the request ${result}`)
+    core.info(`Successfully sent the request, status: ${result.status}`)
     core.setOutput('result', 'Success')
   } catch (error) {
-    core.error(`Failed to submit request : ${error}`)
-    if (error instanceof Error) core.setFailed(error.message)
+    // Log only the message, not the full error — AxiosError stringification
+    // includes the request config (auth credentials).
+    const message = error instanceof Error ? error.message : String(error)
+    core.error(`Failed to submit request : ${message}`)
+    core.setFailed(message)
   }
 }
