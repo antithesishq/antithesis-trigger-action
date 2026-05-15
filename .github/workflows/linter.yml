@@ -47,3 +47,9 @@ jobs:
           VALIDATE_TYPESCRIPT_STANDARD: false
           VALIDATE_JSCPD: false
           VALIDATE_MARKDOWN: false
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
+          LINTER_RULES_PATH: .
+          TYPESCRIPT_ES_CONFIG_FILE: eslint.config.mjs
+          JAVASCRIPT_ES_CONFIG_FILE: eslint.config.mjs
