@@ -21,7 +21,7 @@ jobs:
             core.setOutput("msg", message);
 
       - name: Send a stream message
-        uses: zulip/github-actions-zulip/send-message@v1
+        uses: zulip/github-actions-zulip/send-message@v2
         with:
           api-key: ${{ secrets.ZULIP_API_KEY }}
           email: ${{ secrets.ZULIP_BOT_EMAIL }}
