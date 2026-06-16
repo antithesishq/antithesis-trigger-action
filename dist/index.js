@@ -10433,6 +10433,18 @@ var hasOwn = __nccwpck_require__(4076);
 var populate = __nccwpck_require__(1835);
 
 /**
+ * Escape CR, LF, and `"` in a multipart `name`/`filename` parameter, so a field
+ * name or filename can not break out of its header line to inject headers or
+ * smuggle additional parts. Matches the WHATWG HTML multipart/form-data encoding.
+ *
+ * @param {string} str - the parameter value to escape
+ * @returns {string} the escaped value
+ */
+function escapeHeaderParam(str) {
+  return String(str).replace(/\r/g, '%0D').replace(/\n/g, '%0A').replace(/"/g, '%22');
+}
+
+/**
  * Create readable "multipart/form-data" streams.
  * Can be used to submit forms
  * and file uploads to other web applications.
@@ -10597,7 +10609,7 @@ FormData.prototype._multiPartHeader = function (field, value, options) {
   var contents = '';
   var headers = {
     // add custom disposition as third element or keep it two elements if not
-    'Content-Disposition': ['form-data', 'name="' + field + '"'].concat(contentDisposition || []),
+    'Content-Disposition': ['form-data', 'name="' + escapeHeaderParam(field) + '"'].concat(contentDisposition || []),
     // if no content type. allow it to be empty array
     'Content-Type': [].concat(contentType || [])
   };
@@ -10651,7 +10663,7 @@ FormData.prototype._getContentDisposition = function (value, options) { // eslin
   }
 
   if (filename) {
-    return 'filename="' + filename + '"';
+    return 'filename="' + escapeHeaderParam(filename) + '"';
   }
 };
 
@@ -40669,13 +40681,30 @@ async function run() {
         // appearance in logs (e.g. axios error messages) is masked by the runner.
         const username = core.getInput('username');
         const password = core.getInput('password');
+        const api_key = core.getInput('api_key');
         const github_token = core.getInput('github_token');
         if (username)
             core.setSecret(username);
         if (password)
             core.setSecret(password);
+        if (api_key)
+            core.setSecret(api_key);
         if (github_token)
             core.setSecret(github_token);
+        // Prefer API key (Bearer auth) when provided; otherwise fall back to
+        // basic auth with username/password. Fail fast if neither is supplied.
+        let request_config;
+        if (api_key) {
+            request_config = {
+                headers: { Authorization: `Bearer ${api_key}` }
+            };
+        }
+        else if (username && password) {
+            request_config = { auth: { username, password } };
+        }
+        else {
+            throw new Error('Missing credentials: provide either `api_key`, or both `username` and `password`.');
+        }
         // Build the request URL
         const tenant = core.getInput('tenant');
         const notebook_name = core.getInput('notebook_name');
@@ -40748,12 +40777,7 @@ async function run() {
         };
         // Call into Antithesis. Axios throws on non-2XX by default, so any HTTP
         // error falls through to the outer catch.
-        const result = await axios_1.default.post(url, body, {
-            auth: {
-                username,
-                password
-            }
-        });
+        const result = await axios_1.default.post(url, body, request_config);
         // Update GitHub commit status with pending status
         // Only if we have a callback URL & a token, because we want to make sure
         // that Antithesis could update the status to done

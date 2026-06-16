@@ -71,10 +71,29 @@ export async function run(): Promise<void> {
     // appearance in logs (e.g. axios error messages) is masked by the runner.
     const username = core.getInput('username')
     const password = core.getInput('password')
+    const api_key = core.getInput('api_key')
     const github_token = core.getInput('github_token')
     if (username) core.setSecret(username)
     if (password) core.setSecret(password)
+    if (api_key) core.setSecret(api_key)
     if (github_token) core.setSecret(github_token)
+
+    // Prefer API key (Bearer auth) when provided; otherwise fall back to
+    // basic auth with username/password. Fail fast if neither is supplied.
+    let request_config: { auth?: { username: string; password: string } } & {
+      headers?: Record<string, string>
+    }
+    if (api_key) {
+      request_config = {
+        headers: { Authorization: `Bearer ${api_key}` }
+      }
+    } else if (username && password) {
+      request_config = { auth: { username, password } }
+    } else {
+      throw new Error(
+        'Missing credentials: provide either `api_key`, or both `username` and `password`.'
+      )
+    }
 
     // Build the request URL
     const tenant: string = core.getInput('tenant')
@@ -175,12 +194,7 @@ export async function run(): Promise<void> {
 
     // Call into Antithesis. Axios throws on non-2XX by default, so any HTTP
     // error falls through to the outer catch.
-    const result = await axios.post(url, body, {
-      auth: {
-        username,
-        password
-      }
-    })
+    const result = await axios.post(url, body, request_config)
 
     // Update GitHub commit status with pending status
     // Only if we have a callback URL & a token, because we want to make sure
