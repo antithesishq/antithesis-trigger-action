@@ -18,6 +18,8 @@ const runMock = jest.spyOn(main, 'run')
 let infoMock: jest.SpyInstance
 let errorMock: jest.SpyInstance
 let getInputMock: jest.SpyInstance
+let getBooleanInputMock: jest.SpyInstance
+let getIDTokenMock: jest.SpyInstance
 let setOutputMock: jest.SpyInstance
 let setFailedMock: jest.SpyInstance
 let axiosMock: jest.SpyInstance
@@ -90,6 +92,24 @@ parameter2=value2
         default:
           return ''
       }
+    })
+
+    getBooleanInputMock = jest
+      .spyOn(core, 'getBooleanInput')
+      .mockImplementation()
+    getBooleanInputMock.mockImplementation((name: string): boolean => {
+      switch (name) {
+        case 'github_auth':
+          return false
+        default:
+          throw new Error(`unknown bool input: ${name}`)
+      }
+    })
+
+    getIDTokenMock = jest.spyOn(core, 'getIDToken').mockImplementation()
+    getIDTokenMock.mockImplementation((audience: string): string => {
+      if (audience === 'antithesis') return 'gha-oidc'
+      throw new Error(`invalid audience: ${audience}`)
     })
 
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
@@ -231,6 +251,50 @@ parameter2=value2
     expect(request_config).not.toHaveProperty('auth')
   })
 
+  it('prefers oidc over api key/username/password when all are set', async () => {
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'notebook_name':
+          return 'test_notebook_name'
+        case 'tenant':
+          return 'test_tenant'
+        case 'username':
+          return 'username'
+        case 'password':
+          return 'password'
+        case 'api_key':
+          return 'secret-api-key'
+        case 'github_token':
+          return 'github_token'
+        default:
+          return ''
+      }
+    })
+    getBooleanInputMock.mockImplementation((name: string): boolean => {
+      switch (name) {
+        case 'github_auth':
+          return true
+        default:
+          throw new Error(`unknown bool input: ${name}`)
+      }
+    })
+
+    axiosMock.mockImplementation(() => {
+      return {
+        status: 202
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    const [, , request_config] = axiosMock.mock.calls[0]
+    expect(request_config).toEqual({
+      headers: { Authorization: 'GHA gha-oidc' }
+    })
+    expect(request_config).not.toHaveProperty('auth')
+  })
+
   it('fails when neither api_key nor username/password are set', async () => {
     getInputMock.mockImplementation((name: string): string => {
       switch (name) {
@@ -248,7 +312,7 @@ parameter2=value2
 
     expect(axiosMock).not.toHaveBeenCalled()
     expect(setFailedMock).toHaveBeenCalledWith(
-      'Missing credentials: provide either `api_key`, or both `username` and `password`.'
+      'Missing credentials: set `github_auth`, `api_key`, or both `username` and `password`.'
     )
   })
 
@@ -271,7 +335,7 @@ parameter2=value2
 
     expect(axiosMock).not.toHaveBeenCalled()
     expect(setFailedMock).toHaveBeenCalledWith(
-      'Missing credentials: provide either `api_key`, or both `username` and `password`.'
+      'Missing credentials: set `github_auth`, `api_key`, or both `username` and `password`.'
     )
   })
 

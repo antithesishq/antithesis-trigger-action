@@ -13,6 +13,7 @@ const THIS_ACTION = 'antithesis-trigger-action'
 /* Literals which must match Antithesis-internal literals. */
 const GITHUB_ACTION = 'github_action' // identical to our KNOWN_RUN_CREATOR_TYPE.GITHUB_ACTION
 const INTEGRATIONS_TYPE_GITHUB = 'github' // identical to PARAM_INTEGRATIONS_TYPE_GITHUB
+const OIDC_AUDIENCE = 'antithesis' // identical to validate_gha_claims
 
 type CommitInfo = {
   'vcs.version_id': string
@@ -73,17 +74,23 @@ export async function run(): Promise<void> {
     const password = core.getInput('password')
     const api_key = core.getInput('api_key')
     const github_token = core.getInput('github_token')
+    const use_oidc = core.getBooleanInput('github_auth')
     if (username) core.setSecret(username)
     if (password) core.setSecret(password)
     if (api_key) core.setSecret(api_key)
     if (github_token) core.setSecret(github_token)
 
-    // Prefer API key (Bearer auth) when provided; otherwise fall back to
+    // Prefer OIDC or API key (Bearer auth) when provided; otherwise fall back to
     // basic auth with username/password. Fail fast if neither is supplied.
     let request_config: { auth?: { username: string; password: string } } & {
       headers?: Record<string, string>
     }
-    if (api_key) {
+    if (use_oidc === true) {
+      const token = await core.getIDToken(OIDC_AUDIENCE)
+      request_config = {
+        headers: { Authorization: `GHA ${token}` }
+      }
+    } else if (api_key) {
       request_config = {
         headers: { Authorization: `Bearer ${api_key}` }
       }
@@ -91,7 +98,7 @@ export async function run(): Promise<void> {
       request_config = { auth: { username, password } }
     } else {
       throw new Error(
-        'Missing credentials: provide either `api_key`, or both `username` and `password`.'
+        'Missing credentials: set `github_auth`, `api_key`, or both `username` and `password`.'
       )
     }
 

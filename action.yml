@@ -36,6 +36,11 @@ inputs:
       ignored. Contact support@antithesis.com to obtain a key.'
     required: false
     default: ''
+  github_auth:
+    description:
+      'Whether to use GitHub OIDC authentication to talk to Antithesis'
+    required: false
+    default: false
   github_token:
     description: 'The Github token to be used to post back status updates'
     required: true
