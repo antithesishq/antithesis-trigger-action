@@ -23,20 +23,19 @@ example usage here in our demo project
 
 ### Instructions
 
-1. Add your Antithesis credentials to your GitHub repository secrets. The
-   action supports two authentication methods — use **one** of them:
-
+1. Add your Antithesis credentials to your GitHub repository secrets. The action
+   supports two authentication methods — use **one** of them:
    - **API key (recommended)**: store your Antithesis API key as a repository
      secret named `ANTITHESIS_API_KEY`. The action sends it as
-     `Authorization: Bearer <api_key>`. Contact `support@antithesis.com` or
-     your forward-deployed engineer to obtain a key.
+     `Authorization: Bearer <api_key>`. Contact `support@antithesis.com` or your
+     forward-deployed engineer to obtain a key.
    - **Basic auth (legacy)**: store your Antithesis username and password as
      repository secrets named `ANTITHESIS_USERNAME` and `ANTITHESIS_PASSWORD`.
 
    Navigate to your repository action secrets settings found
-   [here](https://github.com/<org_name>/<repo_name>/settings/secrets/actions)
-   to add the secret(s). If both an API key and username/password are
-   provided, the API key takes precedence.
+   [here](https://github.com/<org_name>/<repo_name>/settings/secrets/actions) to
+   add the secret(s). If both an API key and username/password are provided, the
+   API key takes precedence.
 
 2. Create a limited scope PAT token to enable Antithesis to post back results to
    GitHub. Navigate to your fine-grained access token settings found
@@ -98,11 +97,10 @@ Or using basic auth (legacy):
 - **tenant** : your tenant's name (e.g. If your subdomain is
   $TENANT_NAME.antithesis.com, your tenant name is `$TENANT_NAME`)
 - **api_key** : An Antithesis API key. When provided, the action authenticates
-  via `Authorization: Bearer <api_key>` and the `username`/`password` inputs
-  are ignored. You must provide either `api_key` or both `username` and
-  `password`.
-- **username** / **password** : Your Antithesis username and password, used
-  for basic-auth requests. Required when `api_key` is not set.
+  via `Authorization: Bearer <api_key>` and the `username`/`password` inputs are
+  ignored. You must provide either `api_key` or both `username` and `password`.
+- **username** / **password** : Your Antithesis username and password, used for
+  basic-auth requests. Required when `api_key` is not set.
 - **config_image** : The image version that Antithesis will pull from the
   container registry for the config image. This should be a single image version
   formatted in the same way as those in the antithesis.images parameter.
