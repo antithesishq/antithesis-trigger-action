@@ -131,6 +131,12 @@ parameter2=value2
     // Validate callback is called correctly
     expect(axiosMock).toHaveBeenCalled()
 
+    // When no api_key is set, fall back to basic auth.
+    const [, , request_config] = axiosMock.mock.calls[0]
+    expect(request_config).toEqual({
+      auth: { username: 'username', password: 'password' }
+    })
+
     // Verify that all of the core library functions were called correctly
     expect(infoMock).toHaveBeenNthCalledWith(
       1,
@@ -150,6 +156,123 @@ parameter2=value2
     expect(createCommitStatusMock).toHaveBeenCalledTimes(1)
 
     expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
+  })
+
+  it('uses Bearer auth when api_key is set', async () => {
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'notebook_name':
+          return 'test_notebook_name'
+        case 'tenant':
+          return 'test_tenant'
+        case 'api_key':
+          return 'secret-api-key'
+        case 'github_token':
+          return 'github_token'
+        default:
+          return ''
+      }
+    })
+
+    axiosMock.mockImplementation(() => {
+      return {
+        status: 202
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    expect(axiosMock).toHaveBeenCalled()
+
+    // api_key takes precedence and is sent as a Bearer header; no basic auth.
+    const [, , request_config] = axiosMock.mock.calls[0]
+    expect(request_config).toEqual({
+      headers: { Authorization: 'Bearer secret-api-key' }
+    })
+
+    expect(setOutputMock).toHaveBeenCalledWith('result', 'Success')
+    expect(setFailedMock).not.toHaveBeenCalled()
+  })
+
+  it('prefers api_key over username/password when both are set', async () => {
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'notebook_name':
+          return 'test_notebook_name'
+        case 'tenant':
+          return 'test_tenant'
+        case 'username':
+          return 'username'
+        case 'password':
+          return 'password'
+        case 'api_key':
+          return 'secret-api-key'
+        case 'github_token':
+          return 'github_token'
+        default:
+          return ''
+      }
+    })
+
+    axiosMock.mockImplementation(() => {
+      return {
+        status: 202
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    const [, , request_config] = axiosMock.mock.calls[0]
+    expect(request_config).toEqual({
+      headers: { Authorization: 'Bearer secret-api-key' }
+    })
+    expect(request_config).not.toHaveProperty('auth')
+  })
+
+  it('fails when neither api_key nor username/password are set', async () => {
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'notebook_name':
+          return 'test_notebook_name'
+        case 'tenant':
+          return 'test_tenant'
+        default:
+          return ''
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    expect(axiosMock).not.toHaveBeenCalled()
+    expect(setFailedMock).toHaveBeenCalledWith(
+      'Missing credentials: provide either `api_key`, or both `username` and `password`.'
+    )
+  })
+
+  it('fails when only username (no password) is set', async () => {
+    getInputMock.mockImplementation((name: string): string => {
+      switch (name) {
+        case 'notebook_name':
+          return 'test_notebook_name'
+        case 'tenant':
+          return 'test_tenant'
+        case 'username':
+          return 'username'
+        default:
+          return ''
+      }
+    })
+
+    await main.run()
+    expect(runMock).toHaveReturned()
+
+    expect(axiosMock).not.toHaveBeenCalled()
+    expect(setFailedMock).toHaveBeenCalledWith(
+      'Missing credentials: provide either `api_key`, or both `username` and `password`.'
+    )
   })
 
   it('calls Antithesis even when no callback url', async () => {

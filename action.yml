@@ -18,12 +18,23 @@ inputs:
     required: true
     default: ''
   username:
-    description: 'The username of the account running the workflow'
-    required: true
+    description:
+      'The username of the account running the workflow. Required when `api_key`
+      is not set.'
+    required: false
     default: ''
   password:
-    description: 'The password of the account running the workflow'
-    required: true
+    description:
+      'The password of the account running the workflow. Required when `api_key`
+      is not set.'
+    required: false
+    default: ''
+  api_key:
+    description:
+      'An Antithesis API key. When provided, this is used to authenticate via
+      `Authorization: Bearer <api_key>` and the `username`/`password` inputs are
+      ignored. Contact support@antithesis.com to obtain a key.'
+    required: false
     default: ''
   github_token:
     description: 'The Github token to be used to post back status updates'
