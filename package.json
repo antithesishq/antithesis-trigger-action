@@ -1,7 +1,7 @@
 {
   "name": "antithesis-trigger-action",
   "description": "GitHub Action that triggers an Antithesis test run",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "author": "Antithesis",
   "private": true,
   "homepage": "https://github.com/antithesishq/antithesis-trigger-action",
