@@ -33,10 +33,7 @@ export default tseslint.config(
       parserOptions: {
         ecmaVersion: 2023,
         sourceType: 'module',
-        project: [
-          './.github/linters/tsconfig.json',
-          './tsconfig.json'
-        ]
+        project: ['./.github/linters/tsconfig.json', './tsconfig.json']
       }
     },
     rules: {
@@ -48,6 +45,10 @@ export default tseslint.config(
       'no-console': 'off',
       'no-unused-vars': 'off',
       'prettier/prettier': 'error',
+      'jest/expect-expect': [
+        'warn',
+        { assertFunctionNames: ['expect', 'fc.assert'] }
+      ],
       '@typescript-eslint/array-type': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/ban-ts-comment': 'error',

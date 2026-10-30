@@ -38,7 +38,10 @@ example usage here in our demo project
    API key takes precedence.
 
 2. Create a limited scope PAT token to enable Antithesis to post back results to
-   GitHub. Navigate to your fine-grained access token settings found
+   GitHub. (Only needed for the default `fire-and-forget` mode: with
+   `mode: comment` the workflow's own `${{ github.token }}` is enough, see
+   [Live pull request comments](#live-pull-request-comments-mode-comment).)
+   Navigate to your fine-grained access token settings found
    [here](https://github.com/settings/tokens?type=beta) and create a limited
    scope fine-grained access token with minimal permissions. It is recommended
    to limit the token to the repository running the workflow and to only grant
@@ -56,7 +59,7 @@ example usage here in our demo project
 
 ```yml
 - name: Run Antithesis Tests
-  uses: antithesishq/antithesis-trigger-action@v0.5
+  uses: antithesishq/antithesis-trigger-action@v0.13
   with:
     notebook_name: my-test-notebook-name
     tenant: my-tenant-name
@@ -76,7 +79,7 @@ Or using basic auth (legacy):
 
 ```yml
 - name: Run Antithesis Tests
-  uses: antithesishq/antithesis-trigger-action@v0.5
+  uses: antithesishq/antithesis-trigger-action@v0.13
   with:
     notebook_name: my-test-notebook-name
     tenant: my-tenant-name
@@ -96,11 +99,14 @@ Or using basic auth (legacy):
   Antithesis)
 - **tenant** : your tenant's name (e.g. If your subdomain is
   $TENANT_NAME.antithesis.com, your tenant name is `$TENANT_NAME`)
-- **api_key** : An Antithesis API key. When provided, the action authenticates
-  via `Authorization: Bearer <api_key>` and the `username`/`password` inputs are
-  ignored. You must provide either `api_key` or both `username` and `password`.
-- **username** / **password** : Your Antithesis username and password, used for
-  basic-auth requests. Required when `api_key` is not set.
+- **api_key** : An Antithesis API key. When provided, the `username`/`password`
+  inputs are ignored. When neither is provided, the action authenticates with
+  the workflow's GitHub Actions OIDC token: grant the job
+  `permissions: id-token: write` and ask Antithesis support to trust your
+  repository.
+- **username** / **password** : Your Antithesis username and password (legacy).
+  They can launch a run but cannot read its results, so they do not work with
+  `mode: comment`.
 - **config_image** : The image version that Antithesis will pull from the
   container registry for the config image. This should be a single image version
   formatted in the same way as those in the antithesis.images parameter.
@@ -121,7 +127,144 @@ Or using basic auth (legacy):
   the Git commit's status context will be
   `continuous-testing/antithesis (test_name)`. Otherwise, the default context is
   `continuous-testing/antithesis`. This enables users to run more than one
-  Antithesis test per commit.
+  Antithesis test per commit. With `mode: comment` it also names the pull
+  request comment, so each test gets its own.
+- **mode** : `fire-and-forget` (default) or `comment`. See
+  [Live pull request comments](#live-pull-request-comments-mode-comment).
+- **poll_interval** (`30s`), **update_interval** (`60s`), **wait_timeout**
+  (`5h50m`), **comment_max_failures** (`25`) : tuning for `mode: comment`,
+  described below.
+- **snouty_version** / **snouty_path** : the action talks to Antithesis through
+  the [snouty](https://github.com/antithesishq/snouty) CLI, which it downloads
+  from GitHub releases at the pinned version. On a runner without access to
+  github.com releases, preinstall snouty and pass its path instead.
+
+### Outputs
+
+- **result** : `Success`, `Failed`, or `Skipped` (an `issue_comment` event that
+  was not an `/antithesis` command).
+- **run_id** / **run_url** : the Antithesis run id and its single run view.
+- **status**, **passing**, **failing**, **undetermined** : with `mode: comment`,
+  how the wait ended (`completed`, `run_failed`, `api_error`, `timed_out`,
+  `aborted`) and the final property counts.
+
+## Live pull request comments (`mode: comment`)
+
+By default the action launches the run, posts a pending commit status that links
+to the run, and exits; Antithesis finishes the status when the run ends. With
+`mode: comment` the action instead stays in the job until the run is final and
+keeps **one comment on the pull request** up to date as results stream in: the
+run link, the passing/failing/undetermined counts, and a table of the failing
+properties. When the run finishes, the comment and the commit status show the
+final result and link to the run in Antithesis.
+
+Requirements:
+
+- a pull request: a `pull_request` or `pull_request_target` event, or an
+  [`/antithesis` comment](#running-on-demand-with-antithesis);
+- an `api_key` or GitHub Actions OIDC (username/password can only launch);
+- a `github_token` that can write pull request comments and commit statuses. The
+  workflow's own token is enough; no PAT is needed, because the action posts the
+  final status itself.
+
+```yml
+on:
+  pull_request:
+
+jobs:
+  antithesis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Run Antithesis Tests
+        uses: antithesishq/antithesis-trigger-action@v0.13
+        with:
+          notebook_name: my-test-notebook-name
+          tenant: my-tenant-name
+          api_key: ${{ secrets.ANTITHESIS_API_KEY }}
+          github_token: ${{ github.token }}
+          mode: comment
+          test_name: the-test-name
+```
+
+What the job result means in this mode:
+
+- **Failing properties never fail the job.** They are reported in the comment
+  and in the commit status description; the status itself is `success` when the
+  run completed.
+- The job fails only when Antithesis could not run the test: the run ended
+  `incomplete` or `cancelled` (for example the environment failed to build or
+  setup never completed), the launch returned no run id, or the results could
+  not be read.
+- If the run is still going when `wait_timeout` elapses (default `5h50m`, just
+  under GitHub's six-hour job limit), the action leaves the comment at "still
+  running", leaves the status pending, and exits successfully. Set `0` to wait
+  until the job's own `timeout-minutes` instead.
+
+Tuning:
+
+- **poll_interval** : how often the run status is checked (minimum 15s).
+- **update_interval** : the shortest time between two edits of the comment.
+  Property events arrive through a live stream, so a new failure usually shows
+  within this interval.
+- **comment_max_failures** : how many failing properties the table lists before
+  summarising the rest.
+
+### Running on demand with `/antithesis`
+
+Add a second workflow that listens for pull request comments. A comment whose
+first line is `/antithesis` launches the run in comment mode; the action reacts
+with :eyes: and then updates the pull request as above. Gate the workflow on who
+may comment: anyone who can comment can otherwise start a run.
+
+```yml
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  antithesis:
+    if: >-
+      github.event.issue.pull_request && startsWith(github.event.comment.body,
+      '/antithesis') && contains(fromJSON('["OWNER", "MEMBER",
+      "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Run Antithesis Tests
+        uses: antithesishq/antithesis-trigger-action@v0.13
+        with:
+          notebook_name: my-test-notebook-name
+          tenant: my-tenant-name
+          api_key: ${{ secrets.ANTITHESIS_API_KEY }}
+          github_token: ${{ github.token }}
+```
+
+Comments on a pull request that do not start with `/antithesis` make the action
+exit with `result: Skipped` and no launch.
+
+### Known limitations
+
+- In the default `fire-and-forget` mode the final commit status is posted by
+  Antithesis and links to the triage report; only the action's own pending
+  status links to the single run view.
+- On a pull request from a fork, `${{ github.token }}` is read-only: the run is
+  launched, but the comment and status writes fail with a warning. Use
+  `pull_request_target` if you need comments on fork pull requests.
+- `username`/`password` cannot read results, so `mode: comment` falls back to
+  `fire-and-forget` with them.
+- If the job is cancelled or times out in comment mode, the commit status stays
+  pending; the comment says where to look.
+- Runs on tenants that do not support the property stream fall back to polling
+  at `poll_interval`.
 
 ### FAQs
 

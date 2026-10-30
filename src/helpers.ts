@@ -50,3 +50,37 @@ export function parse_additional_parameters(
   }
   return result
 }
+
+/**
+ * Parse a duration input into milliseconds. A bare number is seconds; otherwise
+ * any combination of `<n>h`, `<n>m`, `<n>s` in that order (`5h50m`, `90s`).
+ */
+export function parse_duration(value: string): number {
+  const trimmed = value.trim()
+  if (/^\d+$/.test(trimmed)) return Number(trimmed) * 1000
+
+  const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(trimmed)
+  if (trimmed === '' || match === null) {
+    throw new Error(
+      `Invalid duration "${value}": use seconds, or a combination of h/m/s such as 30s, 5m, 2h, 5h50m`
+    )
+  }
+  const [, hours, minutes, seconds] = match
+  const total_seconds =
+    Number(hours ?? 0) * 3600 + Number(minutes ?? 0) * 60 + Number(seconds ?? 0)
+  return total_seconds * 1000
+}
+
+/** Resolve after `ms`, or at once when `signal` aborts. Never rejects. */
+export async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  if (ms <= 0 || signal?.aborted) return
+  await new Promise<void>(resolve => {
+    const done = (): void => {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', done)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    signal?.addEventListener('abort', done, { once: true })
+  })
+}

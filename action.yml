@@ -19,25 +19,33 @@ inputs:
     default: ''
   username:
     description:
-      'The username of the account running the workflow. Required when `api_key`
-      is not set.'
+      'The username of the account running the workflow. Required when neither
+      `api_key` nor GitHub Actions OIDC is available. Cannot be used with `mode:
+      comment`.'
     required: false
     default: ''
   password:
     description:
-      'The password of the account running the workflow. Required when `api_key`
-      is not set.'
+      'The password of the account running the workflow. Required when neither
+      `api_key` nor GitHub Actions OIDC is available.'
     required: false
     default: ''
   api_key:
     description:
-      'An Antithesis API key. When provided, this is used to authenticate via
-      `Authorization: Bearer <api_key>` and the `username`/`password` inputs are
-      ignored. Contact support@antithesis.com to obtain a key.'
+      'An Antithesis API key. When provided, the `username`/`password` inputs
+      are ignored. When neither is provided, the action authenticates with the
+      workflow’s GitHub Actions OIDC token (needs `permissions: id-token: write`
+      and a tenant that trusts this repository). Contact support@antithesis.com
+      to obtain a key.'
     required: false
     default: ''
   github_token:
-    description: 'The Github token to be used to post back status updates'
+    description:
+      'The GitHub token used to post back status updates. With `mode: comment`
+      the workflow’s own `${{ github.token }}` is enough (grant `pull-requests:
+      write` and `statuses: write`). With the default mode, Antithesis posts the
+      final commit status after the job has finished, so a longer-lived token (a
+      fine-grained PAT) is required.'
     required: true
     default: ''
   config_image:
@@ -88,11 +96,78 @@ inputs:
       run.'
     required: false
     default: ''
+  mode:
+    description:
+      '`fire-and-forget` (default) launches the run, posts a pending commit
+      status and exits. `comment` waits for the run and keeps a pull request
+      comment up to date with its property results; it needs a pull request (a
+      `pull_request` event, or an `/antithesis` comment on a PR), an API key or
+      OIDC, and a `github_token`.'
+    required: false
+    default: 'fire-and-forget'
+  poll_interval:
+    description:
+      'With `mode: comment`, how often to check the run status (`30s`, `2m`;
+      minimum 15s).'
+    required: false
+    default: '30s'
+  update_interval:
+    description:
+      'With `mode: comment`, the shortest time between two updates of the pull
+      request comment (`60s`, `2m`; minimum 15s).'
+    required: false
+    default: '60s'
+  wait_timeout:
+    description:
+      'With `mode: comment`, how long to wait for the run before leaving it
+      running and exiting successfully (`2h`, `5h50m`; `0` waits until the job
+      itself times out).'
+    required: false
+    default: '5h50m'
+  comment_max_failures:
+    description:
+      'With `mode: comment`, how many failing properties to list in the comment
+      before summarising the rest.'
+    required: false
+    default: '25'
+  snouty_version:
+    description:
+      'The snouty CLI release to download from GitHub for talking to Antithesis.
+      Ignored when `snouty_path` is set.'
+    required: false
+    default: ''
+  snouty_path:
+    description:
+      'Path to a preinstalled snouty binary, for runners without access to
+      github.com releases. Streaming results needs snouty 0.9.0 or newer; older
+      versions fall back to polling.'
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:
   result:
-    description: 'Whether triggering the workflow was successful or not'
+    description:
+      'Whether triggering the workflow was successful or not: `Success`,
+      `Failed`, or `Skipped` (an `issue_comment` event without `/antithesis`).'
+  run_id:
+    description: 'The Antithesis run id, when the launch returned one.'
+  run_url:
+    description: 'The single run view for the launched run in Antithesis.'
+  status:
+    description:
+      'With `mode: comment`: `completed`, `run_failed`, `api_error`, `timed_out`
+      or `aborted`.'
+  passing:
+    description:
+      'With `mode: comment`: the number of passing properties at the end.'
+  failing:
+    description:
+      'With `mode: comment`: the number of failing properties at the end.'
+  undetermined:
+    description:
+      'With `mode: comment`: the number of properties still undetermined at the
+      end.'
 
 runs:
   using: node24

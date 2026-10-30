@@ -1,0 +1,195 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`render_comment matches the aborted layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :hourglass_flowing_sand: Running (workflow cancelled)
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>The workflow was cancelled; the Antithesis run continues.</sub>"
+`;
+
+exports[`render_comment matches the api_error layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :warning: Results unavailable
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Reason** | run not found: abc |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>The run may still be in progress in Antithesis; open it for the current results.</sub>"
+`;
+
+exports[`render_comment matches the completed layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :white_check_mark: Completed
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>Run completed at 2026-10-29 21:30 UTC. Failing properties do not fail this check.</sub>"
+`;
+
+exports[`render_comment matches the launching layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :hourglass_flowing_sand: Launching
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>Live results update as Antithesis reports them (about every 60s). Failing properties do not fail this check.</sub>"
+`;
+
+exports[`render_comment matches the run_failed layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :warning: Did not complete (incomplete)
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Reason** | the environment failed to build |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>The run ended before it could finish testing; this check fails only for that reason.</sub>"
+`;
+
+exports[`render_comment matches the running layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :hourglass_flowing_sand: Running
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>Live results update as Antithesis reports them (about every 60s). Failing properties do not fail this check.</sub>"
+`;
+
+exports[`render_comment matches the running layout 2`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :hourglass_flowing_sand: Running
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>Live results update as Antithesis reports them (about every 60s). Failing properties do not fail this check.</sub>"
+`;
+
+exports[`render_comment matches the timed_out layout 1`] = `
+"<!-- antithesis-trigger-action:test=my-test -->
+## Antithesis · my-test — :hourglass_flowing_sand: Still running
+
+|  |  |
+| --- | --- |
+| **Run** | [View run in Antithesis](https://tenant.antithesis.com/run?run_id=abc-66-0) · \`abc-66-0\` |
+| **Commit** | \`1234567\` |
+| **Properties** | :white_check_mark: 12 passing · :x: 2 failing · :white_circle: 3 undetermined |
+| **Updated** | 2026-10-29 21:30 UTC |
+
+<details open>
+<summary>:x: 2 failing properties</summary>
+
+| Property | Group | Counterexamples |
+| --- | --- | --- |
+| \`Node never loses acknowledged writes\` | durability | 3 |
+| \`Leader election converges\` | — | 1 |
+
+</details>
+
+<sub>This workflow stopped waiting after 5h50m; results keep updating in Antithesis.</sub>"
+`;
