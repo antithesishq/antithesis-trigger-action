@@ -42,10 +42,10 @@ inputs:
   github_token:
     description:
       'The GitHub token used to post back status updates. With `mode: comment`
-      the workflow’s own `${{ github.token }}` is enough (grant `pull-requests:
-      write` and `statuses: write`). With the default mode, Antithesis posts the
-      final commit status after the job has finished, so a longer-lived token (a
-      fine-grained PAT) is required.'
+      the workflow’s own GITHUB_TOKEN (`github.token`) is enough (grant
+      `pull-requests: write` and `statuses: write`). With the default mode,
+      Antithesis posts the final commit status after the job has finished, so a
+      longer-lived token (a fine-grained PAT) is required.'
     required: true
     default: ''
   config_image:
